@@ -59,6 +59,11 @@
 
         <button type="button" class="btn secondary" onclick="addItemRow()">➕ Adicionar item</button>
 
+        <div class="total-row">
+          <span>Total aproximado:</span>
+          <strong id="total-value">R$ 0,00</strong>
+        </div>
+
         <div class="options">
           <label>
             <input type="checkbox" name="samaritano" id="samaritano-checkbox"
@@ -110,6 +115,54 @@
       const row = button.closest('tr');
       row.remove()
     }
+      function parseBrazilianMoney(str) {
+    if (!str) return 0;
+    str = str.replace("R$", "").replace(/\s/g, "").replace(".", "").replace(",", ".");
+    const val = parseFloat(str);
+    return isNaN(val) ? 0 : val;
+  }
+
+  function recalcTotal() {
+    const tbody = document.getElementById('items-body');
+    const rows = tbody.querySelectorAll('tr');
+    let total = 0;
+
+    rows.forEach(row => {
+      const qtdInput = row.querySelector('input[name="quantidade"]');
+      const valInput = row.querySelector('input[name="valor"]');
+
+      const qtd = parseInt(qtdInput.value || "0", 10);
+      const val = parseBrazilianMoney(valInput.value || "0");
+
+      if (qtd > 0 && val > 0) {
+        total += qtd * val;
+      }
+    });
+
+    // Formatar em R$ xx,xx estilo brasileiro
+    const inteiro = Math.floor(total);
+    const centavos = Math.round((total - inteiro) * 100);
+    const inteiroStr = inteiro.toLocaleString("pt-BR");
+    const centavosStr = centavos.toString().padStart(2, "0");
+
+    const totalSpan = document.getElementById('total-value');
+    totalSpan.textContent = `R$ ${inteiroStr},${centavosStr}`;
+  }
+
+  function attachInputListeners(rowOrDocument) {
+    const scope = rowOrDocument || document;
+    const qtdInputs = scope.querySelectorAll('input[name="quantidade"]');
+    const valInputs = scope.querySelectorAll('input[name="valor"]');
+
+    qtdInputs.forEach(inp => {
+      inp.removeEventListener('input', recalcTotal);
+      inp.addEventListener('input', recalcTotal);
+    });
+    valInputs.forEach(inp => {
+      inp.removeEventListener('input', recalcTotal);
+      inp.addEventListener('input', recalcTotal);
+    });
+    }
 
     const samaritanoCheckbox = document.getElementById('samaritano-checkbox');
     const osField = document.getElementById('os-field');
@@ -124,6 +177,11 @@
 
     samaritanoCheckbox.addEventListener('change', toggleOSField);
     toggleOSField();
+
+    document.addEventListener('DOMContentLoaded', function(){
+      attachInputListeners(document);
+      recalcToal();
+    });
   </script>
 </body>
 </html>

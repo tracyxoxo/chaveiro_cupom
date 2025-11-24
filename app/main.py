@@ -1,5 +1,5 @@
-# app/main.py
 from __future__ import annotations
+from pathlib import Path
 
 import os
 from decimal import Decimal, InvalidOperation
@@ -12,20 +12,17 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from .cupom_core import CupomFormatter, ItemCupom
+from .printer import PrinterService
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-CUPONS_DIR = BASE_DIR / "_cupons"
-CUPONS_SAMARITANO_DIR = BASE_DIR / "_cupons_samaritano"
-
-CUPONS_DIR.mkdir(exist_ok=True)
-CUPONS_SAMARITANO_DIR.mkdir(exist_ok=True)
-
 app = FastAPI(title="Chaveiro Brotero - Cupom")
 
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "app" / "static")), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "app" / "templates"))
 
 formatter = CupomFormatter()
+printer_service = PrinterService()
+
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -130,22 +127,15 @@ async def emitir(
         itens = _parse_itens(descricao, quantidade, valor)
         if samaritano_flag and not numero_os.strip():
             raise ValueError("Número da OS é obrigatório para serviços do Samaritano.")
+
         texto = formatter.montar(
             itens=itens,
             samaritano=samaritano_flag,
             numero_os=numero_os.strip() or None,
         )
 
-        ts = formatter._center  # só pra garantir que formatter existe (não usado aqui)
-        # Salva o cupom no diretório correto
-        from datetime import datetime as _dt
-
-        ts = _dt.now().strftime("%Y%m%d_%H%M%S")
-        target_dir = CUPONS_SAMARITANO_DIR if samaritano_flag else CUPONS_DIR
-        filename = f"cupom_{ts}.txt"
-        path = target_dir / filename
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(texto)
+        # 🔽 agora passa pelo serviço de impressão
+        printer_service.emitir(texto, samaritano_flag)
 
         msg = f"Cupom emitido com sucesso ({'Samaritano' if samaritano_flag else 'Padrão'})!"
         error = None
@@ -154,6 +144,11 @@ async def emitir(
         msg = None
         error = str(e)
         preview_text = None
+    except RuntimeError as e:
+        # Erro na impressão ESC/POS mas .txt salvo
+        msg = None
+        error = str(e)
+        preview_text = texto if "texto" in locals() else None
 
     return templates.TemplateResponse(
         "index.html",
@@ -167,3 +162,4 @@ async def emitir(
             "numero_os": numero_os,
         },
     )
+

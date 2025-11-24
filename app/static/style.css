@@ -172,3 +172,15 @@ h2 {
 .btn.danger:hover {
   background-color: #b71c1c;
 }
+
+.total-row {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
+.total-row strong {
+  color: #ffd54f;
+}

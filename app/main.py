@@ -7,12 +7,13 @@ from pathlib import Path
 from typing import List, Optional
 
 from fastapi import FastAPI, Form, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from .cupom_core import CupomFormatter, ItemCupom
 from .printer import PrinterService
+from .history import HistoryService
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 app = FastAPI(title="Chaveiro Brotero - Cupom")
@@ -22,11 +23,41 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "app" / "templates"))
 
 formatter = CupomFormatter()
 printer_service = PrinterService()
+history_service = HistoryService()
+
+
+def _format_money_br(valor_str: str) -> str:
+    """Formata valor em string para formato brasileiro (R$ x.xxx,xx)"""
+    try:
+        valor = Decimal(valor_str)
+        inteiro = int(valor)
+        centavos = int((valor - Decimal(inteiro)) * 100)
+        inteiro_str = f"{inteiro:,}".replace(",", ".")
+        return f"{inteiro_str},{centavos:02d}"
+    except Exception:
+        return valor_str.replace(".", ",")
+
+
+def _format_history_for_template(historico: List[dict]) -> List[dict]:
+    """Formata o histórico para exibição no template"""
+    historico_formatado = []
+    for cupom in historico:
+        cupom_formatted = cupom.copy()
+        # Formata total
+        cupom_formatted["total_formatado"] = _format_money_br(cupom["total"])
+        # Formata valores dos itens
+        for item in cupom_formatted["itens"]:
+            item["valor_unitario_formatado"] = _format_money_br(item["valor_unitario"])
+        historico_formatado.append(cupom_formatted)
+    return historico_formatado
 
 
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
+    # Carrega histórico para exibir na página
+    historico = history_service.get_history(limit=10)
+    historico_formatado = _format_history_for_template(historico)
     return templates.TemplateResponse(
         "index.html",
         {
@@ -37,6 +68,7 @@ async def index(request: Request):
             "error": None,
             "samaritano": False,
             "numero_os": "",
+            "historico": historico_formatado,
         },
     )
 
@@ -98,6 +130,10 @@ async def preview(
         texto = None
         error = str(e)
 
+    # Carrega histórico para exibir na página
+    historico = history_service.get_history(limit=10)
+    historico_formatado = _format_history_for_template(historico)
+    
     return templates.TemplateResponse(
         "index.html",
         {
@@ -108,6 +144,7 @@ async def preview(
             "error": error,
             "samaritano": samaritano_flag,
             "numero_os": numero_os,
+            "historico": historico_formatado,
         },
     )
 
@@ -137,6 +174,14 @@ async def emitir(
         # 🔽 agora passa pelo serviço de impressão
         printer_service.emitir(texto, samaritano_flag)
 
+        # 🔽 salva no histórico
+        history_service.add_cupom(
+            itens=itens,
+            texto_cupom=texto,
+            samaritano=samaritano_flag,
+            numero_os=numero_os.strip() or None,
+        )
+
         msg = f"Cupom emitido com sucesso ({'Samaritano' if samaritano_flag else 'Padrão'})!"
         error = None
         preview_text = texto
@@ -150,6 +195,10 @@ async def emitir(
         error = str(e)
         preview_text = texto if "texto" in locals() else None
 
+    # Carrega histórico para exibir na página
+    historico = history_service.get_history(limit=10)
+    historico_formatado = _format_history_for_template(historico)
+    
     return templates.TemplateResponse(
         "index.html",
         {
@@ -160,6 +209,14 @@ async def emitir(
             "error": error,
             "samaritano": samaritano_flag,
             "numero_os": numero_os,
+            "historico": historico_formatado,
         },
     )
+
+
+@app.get("/api/historico")
+async def get_historico(limit: Optional[int] = None):
+    """API endpoint para retornar o histórico de cupons"""
+    historico = history_service.get_history(limit=limit)
+    return JSONResponse(content=historico)
 

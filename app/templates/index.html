@@ -93,6 +93,47 @@
         <div class="preview-placeholder">Nenhum cupom pré-visualizado ainda.</div>
       {% endif %}
     </section>
+
+    <section class="history-section">
+      <h2>Histórico de Emissões</h2>
+      {% if historico and historico|length > 0 %}
+        <div class="history-list">
+          {% for cupom in historico %}
+          <div class="history-item">
+            <div class="history-header" onclick="toggleHistoryItem(this)">
+              <div class="history-info">
+                <span class="history-date">{{ cupom.data_emissao_formatada }}</span>
+                <span class="history-type {% if cupom.samaritano %}samaritano{% else %}padrao{% endif %}">
+                  {% if cupom.samaritano %}🩺 Samaritano{% else %}📄 Padrão{% endif %}
+                </span>
+                {% if cupom.numero_os %}
+                <span class="history-os">OS: {{ cupom.numero_os }}</span>
+                {% endif %}
+                <span class="history-total">Total: R$ {{ cupom.total_formatado }}</span>
+              </div>
+              <span class="history-toggle">▼</span>
+            </div>
+            <div class="history-content" style="display: none;">
+              <div class="history-items">
+                <strong>Itens:</strong>
+                <ul>
+                  {% for item in cupom.itens %}
+                  <li>{{ item.quantidade }}x {{ item.descricao }} - R$ {{ item.valor_unitario_formatado }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              <div class="history-text">
+                <strong>Texto do Cupom:</strong>
+                <pre class="preview-box">{{ cupom.texto_cupom }}</pre>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="preview-placeholder">Nenhum cupom emitido ainda.</div>
+      {% endif %}
+    </section>
   </div>
 
   <script>
@@ -180,8 +221,20 @@
 
     document.addEventListener('DOMContentLoaded', function(){
       attachInputListeners(document);
-      recalcToal();
+      recalcTotal();
     });
+
+    function toggleHistoryItem(header) {
+      const content = header.nextElementSibling;
+      const toggle = header.querySelector('.history-toggle');
+      if (content.style.display === 'none' || !content.style.display) {
+        content.style.display = 'block';
+        toggle.textContent = '▲';
+      } else {
+        content.style.display = 'none';
+        toggle.textContent = '▼';
+      }
+    }
   </script>
 </body>
 </html>

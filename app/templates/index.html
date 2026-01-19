@@ -1,0 +1,187 @@
+<!-- app/templates/index.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chaveiro Brotero - Cupom</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo">🔑</div>
+      <div class="title">CHAVEIRO BROTERO</div>
+    </header>
+
+    {% if error %}
+      <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+    {% if msg %}
+      <div class="alert alert-success">{{ msg }}</div>
+    {% endif %}
+
+    <section class="form-section">
+      <h2>Itens do Cupom</h2>
+      <form id="cupom-form" method="post">
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Qtd</th>
+              <th>Valor (R$)</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody id="items-body">
+            {% if itens and itens|length > 0 %}
+              {% for desc, qtd, val in itens %}
+              <tr>
+                <td><input type="text" name="descricao" value="{{ desc }}" required></td>
+                <td><input type="number" name="quantidade" value="{{ qtd }}" min="1" required></td>
+                <td><input type="text" name="valor" value="{{ val }}" required></td>
+                <td>  
+                  <button type="button" class="btn danger" onclick="removeRow(this)">🗑️</button>
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td><input type="text" name="descricao" placeholder="Ex: Cópia de chave tetra" required></td>
+                <td><input type="number" name="quantidade" value="1" min="1" required></td>
+                <td><input type="text" name="valor" placeholder="25,00" required></td>
+                <td>  
+                  <button type="button" class="btn danger" onclick="removeRow(this)">🗑️</button>
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+
+        <button type="button" class="btn secondary" onclick="addItemRow()">➕ Adicionar item</button>
+
+        <div class="total-row">
+          <span>Total aproximado:</span>
+          <strong id="total-value">R$ 0,00</strong>
+        </div>
+
+        <div class="options">
+          <label>
+            <input type="checkbox" name="samaritano" id="samaritano-checkbox"
+                   {% if samaritano %}checked{% endif %}>
+            Serviço para o Samaritano
+          </label>
+
+          <div id="os-field" class="{% if not samaritano %}hidden{% endif %}">
+            <label>Número da OS:
+              <input type="text" name="numero_os" value="{{ numero_os or '' }}">
+            </label>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button formaction="/preview" formmethod="post" class="btn">Pré-visualizar</button>
+          <button formaction="/emitir" formmethod="post" class="btn primary">Emitir cupom</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="preview-section">
+      <h2>Pré-visualização</h2>
+      {% if preview_text %}
+        <pre class="preview-box">{{ preview_text }}</pre>
+      {% else %}
+        <div class="preview-placeholder">Nenhum cupom pré-visualizado ainda.</div>
+      {% endif %}
+    </section>
+  </div>
+
+  <script>
+    function addItemRow() {
+      const tbody = document.getElementById('items-body');
+      const tr = document.createElement('tr');
+
+      tr.innerHTML = `
+        <td><input type="text" name="descricao" placeholder="Descrição" required></td>
+        <td><input type="number" name="quantidade" value="1" min="1" required></td>
+        <td><input type="text" name="valor" placeholder="0,00" required></td>
+        <td>  
+          <button type="button" class="btn danger" onclick="removeRow(this)">🗑️</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    function removeRow(button) {
+      const row = button.closest('tr');
+      row.remove()
+    }
+      function parseBrazilianMoney(str) {
+    if (!str) return 0;
+    str = str.replace("R$", "").replace(/\s/g, "").replace(".", "").replace(",", ".");
+    const val = parseFloat(str);
+    return isNaN(val) ? 0 : val;
+  }
+
+  function recalcTotal() {
+    const tbody = document.getElementById('items-body');
+    const rows = tbody.querySelectorAll('tr');
+    let total = 0;
+
+    rows.forEach(row => {
+      const qtdInput = row.querySelector('input[name="quantidade"]');
+      const valInput = row.querySelector('input[name="valor"]');
+
+      const qtd = parseInt(qtdInput.value || "0", 10);
+      const val = parseBrazilianMoney(valInput.value || "0");
+
+      if (qtd > 0 && val > 0) {
+        total += qtd * val;
+      }
+    });
+
+    // Formatar em R$ xx,xx estilo brasileiro
+    const inteiro = Math.floor(total);
+    const centavos = Math.round((total - inteiro) * 100);
+    const inteiroStr = inteiro.toLocaleString("pt-BR");
+    const centavosStr = centavos.toString().padStart(2, "0");
+
+    const totalSpan = document.getElementById('total-value');
+    totalSpan.textContent = `R$ ${inteiroStr},${centavosStr}`;
+  }
+
+  function attachInputListeners(rowOrDocument) {
+    const scope = rowOrDocument || document;
+    const qtdInputs = scope.querySelectorAll('input[name="quantidade"]');
+    const valInputs = scope.querySelectorAll('input[name="valor"]');
+
+    qtdInputs.forEach(inp => {
+      inp.removeEventListener('input', recalcTotal);
+      inp.addEventListener('input', recalcTotal);
+    });
+    valInputs.forEach(inp => {
+      inp.removeEventListener('input', recalcTotal);
+      inp.addEventListener('input', recalcTotal);
+    });
+    }
+
+    const samaritanoCheckbox = document.getElementById('samaritano-checkbox');
+    const osField = document.getElementById('os-field');
+
+    function toggleOSField() {
+      if (samaritanoCheckbox.checked) {
+        osField.classList.remove('hidden');
+      } else {
+        osField.classList.add('hidden');
+      }
+    }
+
+    samaritanoCheckbox.addEventListener('change', toggleOSField);
+    toggleOSField();
+
+    document.addEventListener('DOMContentLoaded', function(){
+      attachInputListeners(document);
+      recalcToal();
+    });
+  </script>
+</body>
+</html>

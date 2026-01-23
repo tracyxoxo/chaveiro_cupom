@@ -9,9 +9,16 @@
 <body>
   <div class="container">
     <header class="header">
-      <div class="logo">🔑</div>
-      <div class="title">CHAVEIRO BROTERO - RELATÓRIOS</div>
-      <a href="/" class="btn btn-back">← Voltar</a>
+      <div style="display: flex; align-items: center;">
+        <div class="logo">🔑</div>
+        <div class="title">CHAVEIRO BROTERO - RELATÓRIOS</div>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button id="theme-toggle" class="btn btn-theme" onclick="toggleTheme()" title="Alternar tema">
+          <span id="theme-icon">🌙</span>
+        </button>
+        <a href="/" class="btn btn-back">← Voltar</a>
+      </div>
     </header>
 
     <section class="reports-section">
@@ -28,6 +35,12 @@
           <h3>💰 Fechar o Caixa no Dia</h3>
           <p>Gere relatório completo de todos os cupons emitidos em um dia específico</p>
           <button class="btn primary" onclick="fecharCaixaDia()">Fechar Caixa</button>
+        </div>
+
+        <div class="report-card">
+          <h3>🩺 Fechamento Samaritano</h3>
+          <p>Gere relatório de fechamento de caixa apenas para serviços do Samaritano em um período</p>
+          <button class="btn primary" onclick="fecharCaixaSamaritano()">Fechar Caixa Samaritano</button>
         </div>
       </div>
     </section>
@@ -77,6 +90,36 @@
           <button class="btn primary" onclick="gerarFecharCaixa()">Gerar Relatório do Dia</button>
         </div>
         <div id="resultado-fechar-caixa" class="modal-resultado" style="display: none;"></div>
+      </div>
+    </div>
+
+    <!-- Modal de Fechamento Samaritano -->
+    <div id="modal-fechar-samaritano" class="modal">
+      <div class="modal-content modal-large">
+        <div class="modal-header">
+          <h2>Fechamento de Caixa - Samaritano</h2>
+          <button class="btn danger" onclick="fecharModalFecharSamaritano()" style="padding: 4px 8px;">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px;">Data Inicial:</label>
+            <input type="date" id="data-inicio-samaritano" class="form-input">
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px;">Data Final:</label>
+            <input type="date" id="data-fim-samaritano" class="form-input">
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px;">Status:</label>
+            <select id="filtro-status-samaritano" class="form-input">
+              <option value="">Todos</option>
+              <option value="ATIVO">Ativos</option>
+              <option value="CANCELADO">Cancelados</option>
+            </select>
+          </div>
+          <button class="btn primary" onclick="gerarFecharSamaritano()">Gerar Relatório</button>
+        </div>
+        <div id="resultado-fechar-samaritano" class="modal-resultado" style="display: none;"></div>
       </div>
     </div>
   </div>
@@ -188,6 +231,124 @@
       document.getElementById('data-fechar-caixa').value = hoje;
     }
 
+    function fecharCaixaSamaritano() {
+      document.getElementById('modal-fechar-samaritano').style.display = 'flex';
+      const hoje = new Date().toISOString().split('T')[0];
+      document.getElementById('data-inicio-samaritano').value = hoje;
+      document.getElementById('data-fim-samaritano').value = hoje;
+    }
+
+    function fecharModalFecharSamaritano() {
+      document.getElementById('modal-fechar-samaritano').style.display = 'none';
+      document.getElementById('resultado-fechar-samaritano').style.display = 'none';
+    }
+
+    async function gerarFecharSamaritano() {
+      const dataInicio = document.getElementById('data-inicio-samaritano').value;
+      const dataFim = document.getElementById('data-fim-samaritano').value;
+      const status = document.getElementById('filtro-status-samaritano').value;
+      
+      if (!dataInicio || !dataFim) {
+        alert('Por favor, preencha as datas inicial e final.');
+        return;
+      }
+      
+      try {
+        let url = `/api/relatorio/fechar-samaritano?data_inicio=${dataInicio}&data_fim=${dataFim}`;
+        if (status) {
+          url += `&status=${status}`;
+        }
+        
+        const response = await fetch(url);
+        const relatorio = await response.json();
+        
+        if (relatorio.error) {
+          alert('Erro: ' + relatorio.error);
+          return;
+        }
+        
+        mostrarResultadoFecharSamaritano(relatorio);
+      } catch (error) {
+        alert('Erro ao gerar fechamento Samaritano: ' + error.message);
+      }
+    }
+
+    function mostrarResultadoFecharSamaritano(data) {
+      const resultadoDiv = document.getElementById('resultado-fechar-samaritano');
+      resultadoDiv.style.display = 'block';
+      
+      let html = `
+        <div class="fechar-caixa-header">
+          <h2>Fechamento de Caixa Samaritano</h2>
+          <p>Período: ${data.data_inicio_formatada} a ${data.data_fim_formatada}</p>
+        </div>
+        <div class="relatorio-resumo">
+          <div class="relatorio-totais">
+            <div class="total-item">
+              <span>Total Ativos:</span>
+              <strong class="total-ativo">R$ ${data.total_ativos_formatado}</strong>
+            </div>
+            <div class="total-item">
+              <span>Total Cancelados:</span>
+              <strong class="total-cancelado">R$ ${data.total_cancelados_formatado}</strong>
+            </div>
+            <div class="total-item total-destaque">
+              <span>TOTAL SAMARITANO:</span>
+              <strong class="total-geral">R$ ${data.total_geral_formatado}</strong>
+            </div>
+            <div class="total-item">
+              <span>Quantidade de Cupons:</span>
+              <strong>${data.quantidade}</strong>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: 20px; text-align: center;">
+          <button class="btn primary" onclick="exportarPDFSamaritano('${data.data_inicio}', '${data.data_fim}', '${data.filtro_status || ''}')">
+            📄 Exportar PDF
+          </button>
+        </div>
+        <div class="relatorio-cupons">
+          <h3>Detalhamento dos Cupons Samaritano (${data.cupons.length})</h3>
+          <div class="relatorio-lista">
+      `;
+      
+      data.cupons.forEach(cupom => {
+        html += `
+          <div class="relatorio-cupom-item">
+            <div class="relatorio-cupom-header">
+              <span>${cupom.data_emissao_formatada}</span>
+              <span class="status-badge ${cupom.status === 'ATIVO' ? 'status-ativo' : 'status-cancelado'}">
+                ${cupom.status}
+              </span>
+              <span class="badge-samaritano">🩺 Samaritano</span>
+              ${cupom.numero_os ? `<span>OS: ${cupom.numero_os}</span>` : ''}
+              <span class="relatorio-total">R$ ${cupom.total_formatado}</span>
+            </div>
+            <div class="relatorio-cupom-itens">
+              ${cupom.itens.map(item => 
+                `${item.quantidade}x ${item.descricao} - R$ ${item.valor_unitario_formatado}`
+              ).join('<br>')}
+            </div>
+          </div>
+        `;
+      });
+      
+      html += `
+          </div>
+        </div>
+      `;
+      
+      resultadoDiv.innerHTML = html;
+    }
+
+    function exportarPDFSamaritano(dataInicio, dataFim, status) {
+      let url = `/api/relatorio/fechar-samaritano/pdf?data_inicio=${dataInicio}&data_fim=${dataFim}`;
+      if (status) {
+        url += `&status=${status}`;
+      }
+      window.open(url, '_blank');
+    }
+
     function fecharModalFecharCaixa() {
       document.getElementById('modal-fechar-caixa').style.display = 'none';
       document.getElementById('resultado-fechar-caixa').style.display = 'none';
@@ -282,13 +443,42 @@
     window.onclick = function(event) {
       const modalRelatorio = document.getElementById('modal-relatorio');
       const modalFecharCaixa = document.getElementById('modal-fechar-caixa');
+      const modalSamaritano = document.getElementById('modal-fechar-samaritano');
       if (event.target === modalRelatorio) {
         fecharModalRelatorio();
       }
       if (event.target === modalFecharCaixa) {
         fecharModalFecharCaixa();
       }
+      if (event.target === modalSamaritano) {
+        fecharModalFecharSamaritano();
+      }
     }
+
+    // Toggle de Tema
+    function toggleTheme() {
+      const body = document.body;
+      const themeIcon = document.getElementById('theme-icon');
+      const isDark = body.classList.toggle('dark-mode');
+      
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      themeIcon.textContent = isDark ? '☀️' : '🌙';
+    }
+
+    // Carrega tema salvo
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('theme');
+      const body = document.body;
+      const themeIcon = document.getElementById('theme-icon');
+      
+      if (savedTheme === 'dark') {
+        body.classList.add('dark-mode');
+        themeIcon.textContent = '☀️';
+      } else {
+        body.classList.remove('dark-mode');
+        themeIcon.textContent = '🌙';
+      }
+    });
   </script>
 </body>
 </html>

@@ -220,3 +220,62 @@ class HistoryService:
         fim_dia = data.replace(hour=23, minute=59, second=59, microsecond=999999)
         
         return self.get_relatorio_periodo(data_inicio=inicio_dia, data_fim=fim_dia)
+
+    def fechar_caixa_samaritano(
+        self,
+        data_inicio: datetime | None = None,
+        data_fim: datetime | None = None,
+        status: str | None = None,
+    ) -> Dict[str, Any]:
+        """
+        Gera relatório de fechamento de caixa apenas para serviços do Samaritano
+        
+        Args:
+            data_inicio: Data inicial do período (None = sem limite)
+            data_fim: Data final do período (None = sem limite)
+            status: Filtrar por status ("ATIVO", "CANCELADO", None = todos)
+            
+        Returns:
+            Dict com lista de cupons Samaritano e totais
+        """
+        history = self._read_history()
+        cupons_filtrados = []
+        total_ativos = Decimal("0.00")
+        total_cancelados = Decimal("0.00")
+        
+        for cupom in history:
+            # Migra cupons antigos sem status
+            if "status" not in cupom:
+                cupom["status"] = "ATIVO"
+            
+            # Filtro: apenas Samaritano
+            if not cupom.get("samaritano", False):
+                continue
+            
+            # Filtro por status
+            if status and cupom.get("status") != status:
+                continue
+            
+            # Filtro por data
+            data_emissao = datetime.fromisoformat(cupom["data_emissao"])
+            if data_inicio and data_emissao < data_inicio:
+                continue
+            if data_fim and data_emissao > data_fim:
+                continue
+            
+            cupons_filtrados.append(cupom)
+            
+            # Soma totais
+            total_cupom = Decimal(cupom["total"])
+            if cupom.get("status") == "CANCELADO":
+                total_cancelados += total_cupom
+            else:
+                total_ativos += total_cupom
+        
+        return {
+            "cupons": cupons_filtrados,
+            "total_ativos": str(total_ativos),
+            "total_cancelados": str(total_cancelados),
+            "total_geral": str(total_ativos + total_cancelados),
+            "quantidade": len(cupons_filtrados),
+        }

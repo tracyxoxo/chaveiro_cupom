@@ -79,10 +79,16 @@ class HistoryService:
             "itens": itens_data,
             "total": str(total),
             "texto_cupom": texto_cupom,
+            "status": "ATIVO",  # Novo cupom sempre começa como ATIVO
         }
         
         # Lê histórico atual
         history = self._read_history()
+        
+        # Migra cupons antigos sem status para ATIVO
+        for cupom in history:
+            if "status" not in cupom:
+                cupom["status"] = "ATIVO"
         
         # Adiciona novo cupom no início (mais recente primeiro)
         history.insert(0, cupom_entry)
@@ -103,6 +109,17 @@ class HistoryService:
             Lista de cupons ordenados do mais recente para o mais antigo
         """
         history = self._read_history()
+        
+        # Migra cupons antigos sem status para ATIVO
+        needs_save = False
+        for cupom in history:
+            if "status" not in cupom:
+                cupom["status"] = "ATIVO"
+                needs_save = True
+        
+        if needs_save:
+            self._write_history(history)
+        
         if limit is not None:
             return history[:limit]
         return history
@@ -114,3 +131,92 @@ class HistoryService:
             if cupom.get("id") == cupom_id:
                 return cupom
         return None
+
+    def cancelar_cupom(self, cupom_id: str) -> bool:
+        """
+        Cancela um cupom (muda status para CANCELADO)
+        
+        Returns:
+            True se o cupom foi cancelado, False se não foi encontrado
+        """
+        history = self._read_history()
+        for cupom in history:
+            if cupom.get("id") == cupom_id:
+                cupom["status"] = "CANCELADO"
+                self._write_history(history)
+                return True
+        return False
+
+    def get_relatorio_periodo(
+        self,
+        data_inicio: datetime | None = None,
+        data_fim: datetime | None = None,
+        status: str | None = None,
+    ) -> Dict[str, Any]:
+        """
+        Gera relatório de cupons por período
+        
+        Args:
+            data_inicio: Data inicial do período (None = sem limite)
+            data_fim: Data final do período (None = sem limite)
+            status: Filtrar por status ("ATIVO", "CANCELADO", None = todos)
+            
+        Returns:
+            Dict com lista de cupons e totais
+        """
+        history = self._read_history()
+        cupons_filtrados = []
+        total_ativos = Decimal("0.00")
+        total_cancelados = Decimal("0.00")
+        
+        for cupom in history:
+            # Migra cupons antigos sem status
+            if "status" not in cupom:
+                cupom["status"] = "ATIVO"
+            
+            # Filtro por status
+            if status and cupom.get("status") != status:
+                continue
+            
+            # Filtro por data
+            data_emissao = datetime.fromisoformat(cupom["data_emissao"])
+            if data_inicio and data_emissao < data_inicio:
+                continue
+            if data_fim and data_emissao > data_fim:
+                continue
+            
+            cupons_filtrados.append(cupom)
+            
+            # Soma totais
+            total_cupom = Decimal(cupom["total"])
+            if cupom.get("status") == "CANCELADO":
+                total_cancelados += total_cupom
+            else:
+                total_ativos += total_cupom
+        
+        return {
+            "cupons": cupons_filtrados,
+            "total_ativos": str(total_ativos),
+            "total_cancelados": str(total_cancelados),
+            "total_geral": str(total_ativos + total_cancelados),
+            "quantidade": len(cupons_filtrados),
+        }
+
+    def fechar_caixa_dia(self, data: datetime | None = None) -> Dict[str, Any]:
+        """
+        Gera relatório de fechamento de caixa do dia
+        
+        Args:
+            data: Data do fechamento (None = hoje)
+            
+        Returns:
+            Dict com relatório completo do dia
+        """
+        if data is None:
+            data = datetime.now()
+        
+        # Início e fim do dia
+        inicio_dia = data.replace(hour=0, minute=0, second=0, microsecond=0)
+        fim_dia = data.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        return self.get_relatorio_periodo(data_inicio=inicio_dia, data_fim=fim_dia)

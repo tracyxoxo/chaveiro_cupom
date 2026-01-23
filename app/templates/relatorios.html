@@ -1,0 +1,294 @@
+<!-- app/templates/relatorios.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Relatórios - Chaveiro Brotero</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.0">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo">🔑</div>
+      <div class="title">CHAVEIRO BROTERO - RELATÓRIOS</div>
+      <a href="/" class="btn btn-back">← Voltar</a>
+    </header>
+
+    <section class="reports-section">
+      <h2>Relatórios e Fechamento de Caixa</h2>
+      
+      <div class="reports-grid">
+        <div class="report-card">
+          <h3>📊 Relatório por Período</h3>
+          <p>Gere relatórios detalhados de cupons emitidos em um período específico</p>
+          <button class="btn primary" onclick="abrirModalRelatorio()">Gerar Relatório</button>
+        </div>
+
+        <div class="report-card">
+          <h3>💰 Fechar o Caixa no Dia</h3>
+          <p>Gere relatório completo de todos os cupons emitidos em um dia específico</p>
+          <button class="btn primary" onclick="fecharCaixaDia()">Fechar Caixa</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Modal de Relatório por Período -->
+    <div id="modal-relatorio" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Relatório por Período</h2>
+          <button class="btn danger" onclick="fecharModalRelatorio()" style="padding: 4px 8px;">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px;">Data Inicial:</label>
+            <input type="date" id="data-inicio" class="form-input">
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px;">Data Final:</label>
+            <input type="date" id="data-fim" class="form-input">
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px;">Status:</label>
+            <select id="filtro-status" class="form-input">
+              <option value="">Todos</option>
+              <option value="ATIVO">Ativos</option>
+              <option value="CANCELADO">Cancelados</option>
+            </select>
+          </div>
+          <button class="btn primary" onclick="gerarRelatorioPeriodo()">Gerar Relatório</button>
+        </div>
+        <div id="resultado-relatorio" class="modal-resultado" style="display: none;"></div>
+      </div>
+    </div>
+
+    <!-- Modal de Fechamento de Caixa -->
+    <div id="modal-fechar-caixa" class="modal">
+      <div class="modal-content modal-large">
+        <div class="modal-header">
+          <h2>Fechamento de Caixa</h2>
+          <button class="btn danger" onclick="fecharModalFecharCaixa()" style="padding: 4px 8px;">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px;">Data:</label>
+            <input type="date" id="data-fechar-caixa" class="form-input">
+          </div>
+          <button class="btn primary" onclick="gerarFecharCaixa()">Gerar Relatório do Dia</button>
+        </div>
+        <div id="resultado-fechar-caixa" class="modal-resultado" style="display: none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function abrirModalRelatorio() {
+      document.getElementById('modal-relatorio').style.display = 'flex';
+      const hoje = new Date().toISOString().split('T')[0];
+      document.getElementById('data-inicio').value = hoje;
+      document.getElementById('data-fim').value = hoje;
+    }
+
+    function fecharModalRelatorio() {
+      document.getElementById('modal-relatorio').style.display = 'none';
+      document.getElementById('resultado-relatorio').style.display = 'none';
+    }
+
+    async function gerarRelatorioPeriodo() {
+      const dataInicio = document.getElementById('data-inicio').value;
+      const dataFim = document.getElementById('data-fim').value;
+      const status = document.getElementById('filtro-status').value;
+      
+      if (!dataInicio || !dataFim) {
+        alert('Por favor, preencha as datas inicial e final.');
+        return;
+      }
+      
+      try {
+        let url = `/api/relatorio/periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`;
+        if (status) {
+          url += `&status=${status}`;
+        }
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.error) {
+          alert('Erro: ' + data.error);
+          return;
+        }
+        
+        mostrarResultadoRelatorio(data);
+      } catch (error) {
+        alert('Erro ao gerar relatório: ' + error.message);
+      }
+    }
+
+    function mostrarResultadoRelatorio(data) {
+      const resultadoDiv = document.getElementById('resultado-relatorio');
+      resultadoDiv.style.display = 'block';
+      
+      let html = `
+        <div class="relatorio-resumo">
+          <h3>Resumo do Relatório</h3>
+          <div class="relatorio-totais">
+            <div class="total-item">
+              <span>Total Ativos:</span>
+              <strong class="total-ativo">R$ ${data.total_ativos_formatado}</strong>
+            </div>
+            <div class="total-item">
+              <span>Total Cancelados:</span>
+              <strong class="total-cancelado">R$ ${data.total_cancelados_formatado}</strong>
+            </div>
+            <div class="total-item">
+              <span>Total Geral:</span>
+              <strong class="total-geral">R$ ${data.total_geral_formatado}</strong>
+            </div>
+            <div class="total-item">
+              <span>Quantidade de Cupons:</span>
+              <strong>${data.quantidade}</strong>
+            </div>
+          </div>
+        </div>
+        <div class="relatorio-cupons">
+          <h3>Cupons (${data.cupons.length})</h3>
+          <div class="relatorio-lista">
+      `;
+      
+      data.cupons.forEach(cupom => {
+        html += `
+          <div class="relatorio-cupom-item">
+            <div class="relatorio-cupom-header">
+              <span>${cupom.data_emissao_formatada}</span>
+              <span class="status-badge ${cupom.status === 'ATIVO' ? 'status-ativo' : 'status-cancelado'}">
+                ${cupom.status}
+              </span>
+              <span>R$ ${cupom.total_formatado}</span>
+            </div>
+            <div class="relatorio-cupom-itens">
+              ${cupom.itens.map(item => 
+                `${item.quantidade}x ${item.descricao} - R$ ${item.valor_unitario_formatado}`
+              ).join('<br>')}
+            </div>
+          </div>
+        `;
+      });
+      
+      html += `
+          </div>
+        </div>
+      `;
+      
+      resultadoDiv.innerHTML = html;
+    }
+
+    function fecharCaixaDia() {
+      document.getElementById('modal-fechar-caixa').style.display = 'flex';
+      const hoje = new Date().toISOString().split('T')[0];
+      document.getElementById('data-fechar-caixa').value = hoje;
+    }
+
+    function fecharModalFecharCaixa() {
+      document.getElementById('modal-fechar-caixa').style.display = 'none';
+      document.getElementById('resultado-fechar-caixa').style.display = 'none';
+    }
+
+    async function gerarFecharCaixa() {
+      const data = document.getElementById('data-fechar-caixa').value;
+      
+      if (!data) {
+        alert('Por favor, selecione uma data.');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/relatorio/fechar-caixa?data=${data}`);
+        const relatorio = await response.json();
+        
+        if (relatorio.error) {
+          alert('Erro: ' + relatorio.error);
+          return;
+        }
+        
+        mostrarResultadoFecharCaixa(relatorio);
+      } catch (error) {
+        alert('Erro ao gerar fechamento de caixa: ' + error.message);
+      }
+    }
+
+    function mostrarResultadoFecharCaixa(data) {
+      const resultadoDiv = document.getElementById('resultado-fechar-caixa');
+      resultadoDiv.style.display = 'block';
+      
+      let html = `
+        <div class="fechar-caixa-header">
+          <h2>Fechamento de Caixa - ${data.data_formatada}</h2>
+        </div>
+        <div class="relatorio-resumo">
+          <div class="relatorio-totais">
+            <div class="total-item">
+              <span>Total Ativos:</span>
+              <strong class="total-ativo">R$ ${data.total_ativos_formatado}</strong>
+            </div>
+            <div class="total-item">
+              <span>Total Cancelados:</span>
+              <strong class="total-cancelado">R$ ${data.total_cancelados_formatado}</strong>
+            </div>
+            <div class="total-item total-destaque">
+              <span>TOTAL DO DIA:</span>
+              <strong class="total-geral">R$ ${data.total_geral_formatado}</strong>
+            </div>
+            <div class="total-item">
+              <span>Quantidade de Cupons:</span>
+              <strong>${data.quantidade}</strong>
+            </div>
+          </div>
+        </div>
+        <div class="relatorio-cupons">
+          <h3>Detalhamento dos Cupons (${data.cupons.length})</h3>
+          <div class="relatorio-lista">
+      `;
+      
+      data.cupons.forEach(cupom => {
+        html += `
+          <div class="relatorio-cupom-item">
+            <div class="relatorio-cupom-header">
+              <span>${cupom.data_emissao_formatada}</span>
+              <span class="status-badge ${cupom.status === 'ATIVO' ? 'status-ativo' : 'status-cancelado'}">
+                ${cupom.status}
+              </span>
+              ${cupom.samaritano ? '<span class="badge-samaritano">🩺 Samaritano</span>' : ''}
+              ${cupom.numero_os ? `<span>OS: ${cupom.numero_os}</span>` : ''}
+              <span class="relatorio-total">R$ ${cupom.total_formatado}</span>
+            </div>
+            <div class="relatorio-cupom-itens">
+              ${cupom.itens.map(item => 
+                `${item.quantidade}x ${item.descricao} - R$ ${item.valor_unitario_formatado}`
+              ).join('<br>')}
+            </div>
+          </div>
+        `;
+      });
+      
+      html += `
+          </div>
+        </div>
+      `;
+      
+      resultadoDiv.innerHTML = html;
+    }
+
+    // Fechar modais ao clicar fora
+    window.onclick = function(event) {
+      const modalRelatorio = document.getElementById('modal-relatorio');
+      const modalFecharCaixa = document.getElementById('modal-fechar-caixa');
+      if (event.target === modalRelatorio) {
+        fecharModalRelatorio();
+      }
+      if (event.target === modalFecharCaixa) {
+        fecharModalFecharCaixa();
+      }
+    }
+  </script>
+</body>
+</html>

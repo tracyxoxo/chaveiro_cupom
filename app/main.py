@@ -2,11 +2,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import os
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import List, Optional
 
-from fastapi import FastAPI, Form, Request
+from fastapi import FastAPI, Form, Request, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -70,6 +71,15 @@ async def index(request: Request):
             "numero_os": "",
             "historico": historico_formatado,
         },
+    )
+
+
+@app.get("/relatorios", response_class=HTMLResponse)
+async def relatorios(request: Request):
+    """Página de relatórios"""
+    return templates.TemplateResponse(
+        "relatorios.html",
+        {"request": request},
     )
 
 
@@ -219,4 +229,96 @@ async def get_historico(limit: Optional[int] = None):
     """API endpoint para retornar o histórico de cupons"""
     historico = history_service.get_history(limit=limit)
     return JSONResponse(content=historico)
+
+
+@app.post("/api/cupom/{cupom_id}/cancelar")
+async def cancelar_cupom(cupom_id: str):
+    """Cancela um cupom (muda status para CANCELADO)"""
+    sucesso = history_service.cancelar_cupom(cupom_id)
+    if sucesso:
+        return JSONResponse(content={"success": True, "message": "Cupom cancelado com sucesso"})
+    else:
+        return JSONResponse(
+            content={"success": False, "message": "Cupom não encontrado"},
+            status_code=404
+        )
+
+
+@app.get("/api/relatorio/periodo")
+async def relatorio_periodo(
+    data_inicio: Optional[str] = Query(None, description="Data inicial (YYYY-MM-DD)"),
+    data_fim: Optional[str] = Query(None, description="Data final (YYYY-MM-DD)"),
+    status: Optional[str] = Query(None, description="Filtrar por status (ATIVO, CANCELADO)"),
+):
+    """Gera relatório de cupons por período"""
+    try:
+        data_inicio_dt = None
+        data_fim_dt = None
+        
+        if data_inicio:
+            data_inicio_dt = datetime.strptime(data_inicio, "%Y-%m-%d")
+            data_inicio_dt = data_inicio_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        if data_fim:
+            data_fim_dt = datetime.strptime(data_fim, "%Y-%m-%d")
+            data_fim_dt = data_fim_dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        relatorio = history_service.get_relatorio_periodo(
+            data_inicio=data_inicio_dt,
+            data_fim=data_fim_dt,
+            status=status,
+        )
+        
+        # Formata valores para exibição
+        relatorio["total_ativos_formatado"] = _format_money_br(relatorio["total_ativos"])
+        relatorio["total_cancelados_formatado"] = _format_money_br(relatorio["total_cancelados"])
+        relatorio["total_geral_formatado"] = _format_money_br(relatorio["total_geral"])
+        
+        # Formata cupons para exibição
+        for cupom in relatorio["cupons"]:
+            cupom["total_formatado"] = _format_money_br(cupom["total"])
+            for item in cupom["itens"]:
+                item["valor_unitario_formatado"] = _format_money_br(item["valor_unitario"])
+        
+        return JSONResponse(content=relatorio)
+    except ValueError as e:
+        return JSONResponse(
+            content={"error": f"Data inválida: {str(e)}"},
+            status_code=400
+        )
+
+
+@app.get("/api/relatorio/fechar-caixa")
+async def fechar_caixa(
+    data: Optional[str] = Query(None, description="Data do fechamento (YYYY-MM-DD, padrão: hoje)"),
+):
+    """Gera relatório de fechamento de caixa do dia"""
+    try:
+        data_dt = None
+        if data:
+            data_dt = datetime.strptime(data, "%Y-%m-%d")
+        
+        relatorio = history_service.fechar_caixa_dia(data=data_dt)
+        
+        # Formata valores para exibição
+        relatorio["total_ativos_formatado"] = _format_money_br(relatorio["total_ativos"])
+        relatorio["total_cancelados_formatado"] = _format_money_br(relatorio["total_cancelados"])
+        relatorio["total_geral_formatado"] = _format_money_br(relatorio["total_geral"])
+        
+        # Formata cupons para exibição
+        for cupom in relatorio["cupons"]:
+            cupom["total_formatado"] = _format_money_br(cupom["total"])
+            for item in cupom["itens"]:
+                item["valor_unitario_formatado"] = _format_money_br(item["valor_unitario"])
+        
+        # Adiciona data formatada
+        data_relatorio = data_dt if data_dt else datetime.now()
+        relatorio["data_formatada"] = data_relatorio.strftime("%d/%m/%Y")
+        
+        return JSONResponse(content=relatorio)
+    except ValueError as e:
+        return JSONResponse(
+            content={"error": f"Data inválida: {str(e)}"},
+            status_code=400
+        )
 

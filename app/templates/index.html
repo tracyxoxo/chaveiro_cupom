@@ -132,7 +132,7 @@
       {% if historico and historico|length > 0 %}
         <div class="history-grid">
           {% for cupom in historico %}
-          <div class="history-card {% if (cupom.status or 'ATIVO') == 'CANCELADO' %}history-card-canceled{% endif %}">
+          <div class="history-card {% if (cupom.status or 'ATIVO') == 'CANCELADO' %}history-card-canceled{% endif %}" data-cupom-id="{{ cupom.id }}">
             <div class="history-card-header">
               <div class="history-card-date">
                 <span class="date-icon">📅</span>
@@ -171,8 +171,8 @@
             
             {% if (cupom.status or 'ATIVO') == 'ATIVO' %}
             <div class="history-card-footer">
-              <button class="btn btn-small danger" onclick="cancelarCupom('{{ cupom.id }}', event)">Cancelar</button>
-              <button class="btn btn-small secondary" onclick="verDetalhes('{{ cupom.id }}')">Ver Detalhes</button>
+              <button type="button" class="btn btn-small danger" onclick="cancelarCupom('{{ cupom.id }}', event)">Cancelar</button>
+              <button type="button" class="btn btn-small secondary" onclick="verDetalhes('{{ cupom.id }}')">Ver Detalhes</button>
             </div>
             {% else %}
             <div class="history-card-footer">
@@ -327,7 +327,9 @@
 
 
     async function cancelarCupom(cupomId, event) {
+      event.preventDefault();
       event.stopPropagation();
+      
       if (!confirm('Tem certeza que deseja cancelar este cupom?')) {
         return;
       }
@@ -339,13 +341,61 @@
         const data = await response.json();
         
         if (data.success) {
-          alert('Cupom cancelado com sucesso!');
-          location.reload();
+          // Atualiza a UI dinamicamente sem recarregar a página
+          atualizarCardCupom(cupomId);
         } else {
           alert('Erro ao cancelar cupom: ' + data.message);
         }
       } catch (error) {
         alert('Erro ao cancelar cupom: ' + error.message);
+      }
+    }
+
+    async function atualizarCardCupom(cupomId) {
+      try {
+        // Busca o histórico atualizado
+        const response = await fetch(`/api/historico?limit=10`);
+        const historico = await response.json();
+        
+        // Encontra o cupom atualizado
+        const cupom = historico.find(c => c.id === cupomId);
+        if (!cupom) {
+          // Se não encontrou, recarrega a página
+          location.reload();
+          return;
+        }
+        
+        // Encontra o card do cupom usando data-cupom-id
+        const card = document.querySelector(`.history-card[data-cupom-id="${cupomId}"]`);
+        if (!card) {
+          // Se não encontrou o card, recarrega a página
+          location.reload();
+          return;
+        }
+        
+        // Atualiza o badge de status
+        const cardHeader = card.querySelector('.history-card-header');
+        const statusBadge = cardHeader?.querySelector('.history-status-badge');
+        if (statusBadge) {
+          statusBadge.className = 'history-status-badge status-cancelado';
+          statusBadge.textContent = 'CANCELADO';
+        }
+        
+        // Adiciona classe de cancelado ao card
+        card.classList.add('history-card-canceled');
+        
+        // Atualiza o footer
+        const cardFooter = card.querySelector('.history-card-footer');
+        if (cardFooter) {
+          cardFooter.innerHTML = '<span class="canceled-label">Cupom cancelado</span>';
+        }
+        
+        // Mostra mensagem de sucesso
+        alert('Cupom cancelado com sucesso!');
+      } catch (error) {
+        console.error('Erro ao atualizar card:', error);
+        // Em caso de erro, recarrega a página
+        location.reload();
       }
     }
 

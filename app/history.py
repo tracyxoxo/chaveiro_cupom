@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -10,7 +11,14 @@ from typing import List, Dict, Any
 from .cupom_core import ItemCupom
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-HISTORY_FILE = BASE_DIR / "historico_cupons.json"
+
+# Diretório do histórico: use HISTORICO_CUPONS_DIR (pasta na nuvem) ou raiz do projeto
+_HISTORY_DIR = r"G:\Meu Drive\Sistema Cupom - Chaveiro\Cupons emitidos"
+if _HISTORY_DIR:
+    _history_dir = Path(_HISTORY_DIR).expanduser().resolve()
+else:
+    _history_dir = BASE_DIR
+HISTORY_FILE = _history_dir / "historico_cupons.json"
 
 
 class HistoryService:
@@ -20,7 +28,8 @@ class HistoryService:
         self.history_file = history_file
 
     def _ensure_history_file(self) -> None:
-        """Garante que o arquivo de histórico existe"""
+        """Garante que o diretório e o arquivo de histórico existem"""
+        self.history_file.parent.mkdir(parents=True, exist_ok=True)
         if not self.history_file.exists():
             with open(self.history_file, "w", encoding="utf-8") as f:
                 json.dump([], f, ensure_ascii=False, indent=2)

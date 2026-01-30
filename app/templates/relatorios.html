@@ -171,6 +171,11 @@
       const resultadoDiv = document.getElementById('resultado-relatorio');
       resultadoDiv.style.display = 'block';
       
+      // Captura os parâmetros do relatório para exportação PDF
+      const dataInicio = document.getElementById('data-inicio').value;
+      const dataFim = document.getElementById('data-fim').value;
+      const status = document.getElementById('filtro-status').value;
+      
       let html = `
         <div class="relatorio-resumo">
           <h3>Resumo do Relatório</h3>
@@ -192,6 +197,11 @@
               <strong>${data.quantidade}</strong>
             </div>
           </div>
+        </div>
+        <div style="margin-top: 20px; text-align: center;">
+          <button class="btn primary" onclick="exportarPDFPeriodo('${dataInicio}', '${dataFim}', '${status || ''}')">
+            📄 Exportar PDF
+          </button>
         </div>
         <div class="relatorio-cupons">
           <h3>Cupons (${data.cupons.length})</h3>
@@ -223,6 +233,14 @@
       `;
       
       resultadoDiv.innerHTML = html;
+    }
+
+    function exportarPDFPeriodo(dataInicio, dataFim, status) {
+      let url = `/api/relatorio/periodo/pdf?data_inicio=${dataInicio}&data_fim=${dataFim}`;
+      if (status) {
+        url += `&status=${status}`;
+      }
+      window.open(url, '_blank');
     }
 
     function fecharCaixaDia() {
@@ -381,6 +399,9 @@
       const resultadoDiv = document.getElementById('resultado-fechar-caixa');
       resultadoDiv.style.display = 'block';
       
+      // Captura a data para exportação PDF
+      const dataFechar = document.getElementById('data-fechar-caixa').value;
+      
       let html = `
         <div class="fechar-caixa-header">
           <h2>Fechamento de Caixa - ${data.data_formatada}</h2>
@@ -404,6 +425,11 @@
               <strong>${data.quantidade}</strong>
             </div>
           </div>
+        </div>
+        <div style="margin-top: 20px; text-align: center;">
+          <button class="btn primary" onclick="exportarPDFFecharCaixa('${dataFechar || ''}')">
+            📄 Exportar PDF
+          </button>
         </div>
         <div class="relatorio-cupons">
           <h3>Detalhamento dos Cupons (${data.cupons.length})</h3>
@@ -437,6 +463,14 @@
       `;
       
       resultadoDiv.innerHTML = html;
+    }
+
+    function exportarPDFFecharCaixa(data) {
+      let url = `/api/relatorio/fechar-caixa/pdf`;
+      if (data) {
+        url += `?data=${data}`;
+      }
+      window.open(url, '_blank');
     }
 
     // Fechar modais ao clicar fora

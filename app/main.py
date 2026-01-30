@@ -400,6 +400,80 @@ async def fechar_caixa(
         )
 
 
+@app.get("/api/relatorio/periodo/pdf")
+async def relatorio_periodo_pdf(
+    data_inicio: Optional[str] = Query(None, description="Data inicial (YYYY-MM-DD)"),
+    data_fim: Optional[str] = Query(None, description="Data final (YYYY-MM-DD)"),
+    status: Optional[str] = Query(None, description="Filtrar por status (ATIVO, CANCELADO)"),
+):
+    """Gera PDF do relatório por período"""
+    try:
+        data_inicio_dt = None
+        data_fim_dt = None
+        
+        if data_inicio:
+            data_inicio_dt = datetime.strptime(data_inicio, "%Y-%m-%d")
+            data_inicio_dt = data_inicio_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        if data_fim:
+            data_fim_dt = datetime.strptime(data_fim, "%Y-%m-%d")
+            data_fim_dt = data_fim_dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        relatorio = history_service.get_relatorio_periodo(
+            data_inicio=data_inicio_dt,
+            data_fim=data_fim_dt,
+            status=status,
+        )
+        
+        # Gera HTML do relatório
+        html_content = _gerar_html_pdf_periodo(relatorio, data_inicio_dt, data_fim_dt, status)
+        
+        # Retorna HTML formatado para impressão como PDF
+        return Response(
+            content=html_content,
+            media_type="text/html",
+            headers={
+                "Content-Disposition": f"inline; filename=relatorio_periodo_{data_inicio or 'periodo'}.html"
+            }
+        )
+    except ValueError as e:
+        return JSONResponse(
+            content={"error": f"Data inválida: {str(e)}"},
+            status_code=400
+        )
+
+
+@app.get("/api/relatorio/fechar-caixa/pdf")
+async def fechar_caixa_pdf(
+    data: Optional[str] = Query(None, description="Data do fechamento (YYYY-MM-DD, padrão: hoje)"),
+):
+    """Gera PDF do relatório de fechamento de caixa do dia"""
+    try:
+        data_dt = None
+        if data:
+            data_dt = datetime.strptime(data, "%Y-%m-%d")
+        
+        relatorio = history_service.fechar_caixa_dia(data=data_dt)
+        
+        # Gera HTML do relatório
+        html_content = _gerar_html_pdf_fechar_caixa(relatorio, data_dt)
+        
+        # Retorna HTML formatado para impressão como PDF
+        data_str = data_dt.strftime("%Y-%m-%d") if data_dt else datetime.now().strftime("%Y-%m-%d")
+        return Response(
+            content=html_content,
+            media_type="text/html",
+            headers={
+                "Content-Disposition": f"inline; filename=fechamento_caixa_{data_str}.html"
+            }
+        )
+    except ValueError as e:
+        return JSONResponse(
+            content={"error": f"Data inválida: {str(e)}"},
+            status_code=400
+        )
+
+
 @app.get("/api/relatorio/fechar-samaritano")
 async def fechar_caixa_samaritano(
     data_inicio: Optional[str] = Query(None, description="Data inicial (YYYY-MM-DD)"),
@@ -500,6 +574,346 @@ async def fechar_caixa_samaritano_pdf(
             content={"error": f"Data inválida: {str(e)}"},
             status_code=400
         )
+
+
+def _gerar_html_pdf_periodo(
+    relatorio: Dict[str, Any],
+    data_inicio: datetime | None,
+    data_fim: datetime | None,
+    status: str | None,
+) -> str:
+    """Gera HTML formatado para impressão/PDF do relatório por período"""
+    data_inicio_str = data_inicio.strftime("%d/%m/%Y") if data_inicio else "Início"
+    data_fim_str = data_fim.strftime("%d/%m/%Y") if data_fim else "Fim"
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <title>Relatório por Período</title>
+        <style>
+            @media print {{
+                @page {{
+                    size: A4;
+                    margin: 2cm;
+                }}
+            }}
+            body {{
+                font-family: Arial, sans-serif;
+                margin: 20px;
+                color: #333;
+            }}
+            .header {{
+                text-align: center;
+                border-bottom: 3px solid #3498db;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }}
+            .header h1 {{
+                color: #3498db;
+                margin: 0;
+            }}
+            .info {{
+                margin-bottom: 20px;
+                padding: 15px;
+                background-color: #f8f9fa;
+                border-radius: 8px;
+            }}
+            .totais {{
+                display: flex;
+                justify-content: space-around;
+                margin: 30px 0;
+                padding: 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-radius: 8px;
+            }}
+            .total-item {{
+                text-align: center;
+            }}
+            .total-item strong {{
+                display: block;
+                font-size: 1.5em;
+                margin-top: 5px;
+            }}
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }}
+            th, td {{
+                padding: 12px;
+                text-align: left;
+                border-bottom: 1px solid #ddd;
+            }}
+            th {{
+                background-color: #3498db;
+                color: white;
+            }}
+            tr:nth-child(even) {{
+                background-color: #f8f9fa;
+            }}
+            .status-ativo {{
+                color: #27ae60;
+                font-weight: bold;
+            }}
+            .status-cancelado {{
+                color: #e74c3c;
+                font-weight: bold;
+            }}
+            .footer {{
+                margin-top: 40px;
+                text-align: center;
+                font-size: 0.9em;
+                color: #7f8c8d;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>CHAVEIRO BROTERO</h1>
+            <h2>Relatório por Período</h2>
+        </div>
+        
+        <div class="info">
+            <p><strong>Período:</strong> {data_inicio_str} a {data_fim_str}</p>
+            <p><strong>Status:</strong> {status if status else 'Todos'}</p>
+            <p><strong>Data de Emissão:</strong> {datetime.now().strftime("%d/%m/%Y %H:%M")}</p>
+        </div>
+        
+        <div class="totais">
+            <div class="total-item">
+                <span>Total Ativos</span>
+                <strong>R$ {_format_money_br(relatorio["total_ativos"])}</strong>
+            </div>
+            <div class="total-item">
+                <span>Total Cancelados</span>
+                <strong>R$ {_format_money_br(relatorio["total_cancelados"])}</strong>
+            </div>
+            <div class="total-item">
+                <span>Total Geral</span>
+                <strong>R$ {_format_money_br(relatorio["total_geral"])}</strong>
+            </div>
+            <div class="total-item">
+                <span>Quantidade</span>
+                <strong>{relatorio["quantidade"]}</strong>
+            </div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Data/Hora</th>
+                    <th>Tipo</th>
+                    <th>Status</th>
+                    <th>Itens</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for cupom in relatorio["cupons"]:
+        data_emissao = datetime.fromisoformat(cupom["data_emissao"]).strftime("%d/%m/%Y %H:%M")
+        itens_str = "<br>".join([
+            f"{item['quantidade']}x {item['descricao']} - R$ {_format_money_br(item['valor_unitario'])}"
+            for item in cupom["itens"]
+        ])
+        status_class = "status-ativo" if cupom.get("status") == "ATIVO" else "status-cancelado"
+        tipo_cupom = "🩺 Samaritano" if cupom.get("samaritano") else "📄 Padrão"
+        
+        html += f"""
+                <tr>
+                    <td>{data_emissao}</td>
+                    <td>{tipo_cupom}</td>
+                    <td class="{status_class}">{cupom.get('status', 'ATIVO')}</td>
+                    <td>{itens_str}</td>
+                    <td>R$ {_format_money_br(cupom['total'])}</td>
+                </tr>
+        """
+    
+    html += """
+            </tbody>
+        </table>
+        
+        <div class="footer">
+            <p>Relatório gerado automaticamente pelo sistema Chaveiro Brotero</p>
+            <p>Para imprimir como PDF, use Ctrl+P e selecione "Salvar como PDF"</p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return html
+
+
+def _gerar_html_pdf_fechar_caixa(
+    relatorio: Dict[str, Any],
+    data: datetime | None,
+) -> str:
+    """Gera HTML formatado para impressão/PDF do fechamento de caixa do dia"""
+    data_str = data.strftime("%d/%m/%Y") if data else datetime.now().strftime("%d/%m/%Y")
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <title>Fechamento de Caixa - {data_str}</title>
+        <style>
+            @media print {{
+                @page {{
+                    size: A4;
+                    margin: 2cm;
+                }}
+            }}
+            body {{
+                font-family: Arial, sans-serif;
+                margin: 20px;
+                color: #333;
+            }}
+            .header {{
+                text-align: center;
+                border-bottom: 3px solid #3498db;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }}
+            .header h1 {{
+                color: #3498db;
+                margin: 0;
+            }}
+            .info {{
+                margin-bottom: 20px;
+                padding: 15px;
+                background-color: #f8f9fa;
+                border-radius: 8px;
+            }}
+            .totais {{
+                display: flex;
+                justify-content: space-around;
+                margin: 30px 0;
+                padding: 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-radius: 8px;
+            }}
+            .total-item {{
+                text-align: center;
+            }}
+            .total-item strong {{
+                display: block;
+                font-size: 1.5em;
+                margin-top: 5px;
+            }}
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }}
+            th, td {{
+                padding: 12px;
+                text-align: left;
+                border-bottom: 1px solid #ddd;
+            }}
+            th {{
+                background-color: #3498db;
+                color: white;
+            }}
+            tr:nth-child(even) {{
+                background-color: #f8f9fa;
+            }}
+            .status-ativo {{
+                color: #27ae60;
+                font-weight: bold;
+            }}
+            .status-cancelado {{
+                color: #e74c3c;
+                font-weight: bold;
+            }}
+            .footer {{
+                margin-top: 40px;
+                text-align: center;
+                font-size: 0.9em;
+                color: #7f8c8d;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>CHAVEIRO BROTERO</h1>
+            <h2>Fechamento de Caixa - {data_str}</h2>
+        </div>
+        
+        <div class="info">
+            <p><strong>Data:</strong> {data_str}</p>
+            <p><strong>Data de Emissão:</strong> {datetime.now().strftime("%d/%m/%Y %H:%M")}</p>
+        </div>
+        
+        <div class="totais">
+            <div class="total-item">
+                <span>Total Ativos</span>
+                <strong>R$ {_format_money_br(relatorio["total_ativos"])}</strong>
+            </div>
+            <div class="total-item">
+                <span>Total Cancelados</span>
+                <strong>R$ {_format_money_br(relatorio["total_cancelados"])}</strong>
+            </div>
+            <div class="total-item">
+                <span>Total do Dia</span>
+                <strong>R$ {_format_money_br(relatorio["total_geral"])}</strong>
+            </div>
+            <div class="total-item">
+                <span>Quantidade</span>
+                <strong>{relatorio["quantidade"]}</strong>
+            </div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Data/Hora</th>
+                    <th>Tipo</th>
+                    <th>Status</th>
+                    <th>Itens</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for cupom in relatorio["cupons"]:
+        data_emissao = datetime.fromisoformat(cupom["data_emissao"]).strftime("%d/%m/%Y %H:%M")
+        itens_str = "<br>".join([
+            f"{item['quantidade']}x {item['descricao']} - R$ {_format_money_br(item['valor_unitario'])}"
+            for item in cupom["itens"]
+        ])
+        status_class = "status-ativo" if cupom.get("status") == "ATIVO" else "status-cancelado"
+        tipo_cupom = "🩺 Samaritano" if cupom.get("samaritano") else "📄 Padrão"
+        
+        html += f"""
+                <tr>
+                    <td>{data_emissao}</td>
+                    <td>{tipo_cupom}</td>
+                    <td class="{status_class}">{cupom.get('status', 'ATIVO')}</td>
+                    <td>{itens_str}</td>
+                    <td>R$ {_format_money_br(cupom['total'])}</td>
+                </tr>
+        """
+    
+    html += """
+            </tbody>
+        </table>
+        
+        <div class="footer">
+            <p>Relatório gerado automaticamente pelo sistema Chaveiro Brotero</p>
+            <p>Para imprimir como PDF, use Ctrl+P e selecione "Salvar como PDF"</p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return html
 
 
 def _gerar_html_pdf_samaritano(

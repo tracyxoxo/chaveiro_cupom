@@ -81,6 +81,7 @@ async def index(request: Request):
             "numero_os": "",
             "emitir_nfse": False,
             "cpf_cnpj": "",
+            "imprimir_nfse": False,
             "historico": historico_formatado,
         },
     )
@@ -136,9 +137,11 @@ async def preview(
     numero_os: str = Form(default=""),
     emitir_nfse: Optional[str] = Form(default=None),
     cpf_cnpj: str = Form(default=""),
+    imprimir_nfse: Optional[str] = Form(default=None),
 ):
     samaritano_flag = samaritano is not None
     emitir_nfse_flag = emitir_nfse is not None
+    imprimir_nfse_flag = imprimir_nfse is not None
 
     try:
         itens = _parse_itens(descricao, quantidade, valor)
@@ -173,6 +176,7 @@ async def preview(
             "numero_os": numero_os,
             "emitir_nfse": emitir_nfse_flag,
             "cpf_cnpj": cpf_cnpj,
+            "imprimir_nfse": imprimir_nfse_flag,
             "historico": historico_formatado,
         },
     )
@@ -188,9 +192,11 @@ async def emitir(
     numero_os: str = Form(default=""),
     emitir_nfse: Optional[str] = Form(default=None),
     cpf_cnpj: str = Form(default=""),
+    imprimir_nfse: Optional[str] = Form(default=None),
 ):
     samaritano_flag = samaritano is not None
     emitir_nfse_flag = emitir_nfse is not None
+    imprimir_nfse_flag = imprimir_nfse is not None
     nfse_pdf_id = None
 
     try:
@@ -240,6 +246,13 @@ async def emitir(
                 pdf_path.parent.mkdir(exist_ok=True)
                 with open(pdf_path, "wb") as f:
                     f.write(pdf_content)
+                
+                # Imprime a nota fiscal na impressora apenas se o usuário optou
+                if imprimir_nfse_flag:
+                    try:
+                        printer_service.imprimir_pdf(pdf_path)
+                    except Exception as e:
+                        print(f"Aviso: não foi possível imprimir a NFSe: {e}")
                 
             except ValueError as nfse_error:
                 # Erro de validação - impede a emissão
@@ -295,6 +308,7 @@ async def emitir(
             "numero_os": numero_os,
             "emitir_nfse": emitir_nfse_flag,
             "cpf_cnpj": cpf_cnpj,
+            "imprimir_nfse": imprimir_nfse_flag,
             "nfse_pdf_id": nfse_pdf_id,
             "historico": historico_formatado,
         },

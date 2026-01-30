@@ -105,6 +105,14 @@
                      maxlength="18"
                      {% if emitir_nfse %}required{% endif %}>
             </label>
+            <label style="display: block; margin-top: 8px;">
+              <input type="checkbox" name="imprimir_nfse" id="imprimir-nfse-checkbox"
+                     {% if imprimir_nfse %}checked{% endif %}>
+              Imprimir nota fiscal na impressora
+            </label>
+            <small style="display: block; margin-top: 4px; color: var(--text-muted, #666);">
+              Se não marcar, apenas o PDF será gerado (download).
+            </small>
           </div>
         </div>
 

@@ -3,6 +3,12 @@ import win32print
 from pathlib import Path
 from datetime import datetime
 
+try:
+    import win32api
+    _HAS_WIN32API = True
+except ImportError:
+    _HAS_WIN32API = False
+
 
 class PrinterService:
     def __init__(self):
@@ -56,4 +62,14 @@ class PrinterService:
             win32print.EndDocPrinter(printer)
         finally:
             win32print.ClosePrinter(printer)
+
+    def imprimir_pdf(self, pdf_path: Path) -> None:
+        """Envia um arquivo PDF para a impressora padrão (Windows)."""
+        if not _HAS_WIN32API:
+            raise RuntimeError("win32api não disponível. Impossível imprimir PDF.")
+        path_abs = pdf_path.resolve()
+        if not path_abs.exists():
+            raise FileNotFoundError(f"PDF não encontrado: {path_abs}")
+        # ShellExecute com "print" usa o aplicativo associado ao .pdf e imprime
+        win32api.ShellExecute(0, "print", str(path_abs), None, ".", 0)
 

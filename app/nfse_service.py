@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
 
 try:
-    from nfse_client import NFSeClient
+    from .nfse_client import NFSeClient
     _HAS_NFSE = True
 except ImportError:
     _HAS_NFSE = False

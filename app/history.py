@@ -13,7 +13,7 @@ from .cupom_core import ItemCupom
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Diretório do histórico: use HISTORICO_CUPONS_DIR (pasta na nuvem) ou raiz do projeto
-_HISTORY_DIR = r"G:\Meu Drive\Sistema Cupom - Chaveiro\Cupons emitidos"
+_HISTORY_DIR = r"C:\Users\mathh\Documents\Projetos\chaveiro_cupom\app\teste"
 if _HISTORY_DIR:
     _history_dir = Path(_HISTORY_DIR).expanduser().resolve()
 else:

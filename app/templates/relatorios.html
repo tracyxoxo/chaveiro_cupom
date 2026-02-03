@@ -3,514 +3,409 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Relatórios - Chaveiro Brotero</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.0">
+  <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=3.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="container">
-    <header class="header">
-      <div style="display: flex; align-items: center;">
-        <div class="logo">🔑</div>
-        <div class="title">CHAVEIRO BROTERO - RELATÓRIOS</div>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="sidebar-logo">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        </span>
+        <span class="sidebar-title">Chaveiro Brotero</span>
       </div>
-      <div style="display: flex; gap: 10px; align-items: center;">
-        <button id="theme-toggle" class="btn btn-theme" onclick="toggleTheme()" title="Alternar tema">
-          <span id="theme-icon">🌙</span>
+      <nav class="sidebar-nav">
+        <a href="/" class="sidebar-link">
+          <svg class="sidebar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Cupom
+        </a>
+        <a href="/relatorios" class="sidebar-link active">
+          <svg class="sidebar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Relatórios
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button type="button" id="theme-toggle" class="sidebar-btn" onclick="toggleTheme()" title="Alternar tema">
+          <span id="theme-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </span>
+          <span class="theme-label">Modo escuro</span>
         </button>
-        <a href="/" class="btn btn-back">← Voltar</a>
       </div>
-    </header>
+    </aside>
 
-    <section class="reports-section">
-      <h2>Relatórios e Fechamento de Caixa</h2>
-      
-      <div class="reports-grid">
-        <div class="report-card">
-          <h3>📊 Relatório por Período</h3>
-          <p>Gere relatórios detalhados de cupons emitidos em um período específico</p>
-          <button class="btn primary" onclick="abrirModalRelatorio()">Gerar Relatório</button>
-        </div>
+    <main class="main">
+      <header class="main-header">
+        <h1 class="main-title">Relatórios</h1>
+        <div class="header-actions"></div>
+      </header>
 
-        <div class="report-card">
-          <h3>💰 Fechar o Caixa no Dia</h3>
-          <p>Gere relatório completo de todos os cupons emitidos em um dia específico</p>
-          <button class="btn primary" onclick="fecharCaixaDia()">Fechar Caixa</button>
-        </div>
+      <div class="main-content">
+        <section class="card card-reports">
+          <div class="card-header">
+            <h2 class="card-title">Relatórios e fechamento de caixa</h2>
+          </div>
+          <div class="card-body">
+            <div class="reports-grid">
+              <article class="report-card">
+                <div class="report-card-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </div>
+                <h3>Relatório por período</h3>
+                <p>Gere relatórios detalhados de cupons emitidos em um período específico.</p>
+                <button type="button" class="btn btn-primary" onclick="abrirModalRelatorio()">Gerar relatório</button>
+              </article>
 
-        <div class="report-card">
-          <h3>🩺 Fechamento Samaritano</h3>
-          <p>Gere relatório de fechamento de caixa apenas para serviços do Samaritano em um período</p>
-          <button class="btn primary" onclick="fecharCaixaSamaritano()">Fechar Caixa Samaritano</button>
-        </div>
+              <article class="report-card">
+                <div class="report-card-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                </div>
+                <h3>Fechar o caixa no dia</h3>
+                <p>Gere relatório completo de todos os cupons emitidos em um dia específico.</p>
+                <button type="button" class="btn btn-primary" onclick="fecharCaixaDia()">Fechar caixa</button>
+              </article>
+
+              <article class="report-card">
+                <div class="report-card-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <h3>Fechamento Samaritano</h3>
+                <p>Gere relatório de fechamento de caixa apenas para serviços do Samaritano em um período.</p>
+                <button type="button" class="btn btn-primary" onclick="fecharCaixaSamaritano()">Fechar caixa Samaritano</button>
+              </article>
+            </div>
+          </div>
+        </section>
       </div>
-    </section>
+    </main>
+  </div>
 
-    <!-- Modal de Relatório por Período -->
-    <div id="modal-relatorio" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Relatório por Período</h2>
-          <button class="btn danger" onclick="fecharModalRelatorio()" style="padding: 4px 8px;">✕</button>
-        </div>
-        <div class="modal-body">
-          <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 4px;">Data Inicial:</label>
-            <input type="date" id="data-inicio" class="form-input">
-          </div>
-          <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 4px;">Data Final:</label>
-            <input type="date" id="data-fim" class="form-input">
-          </div>
-          <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 4px;">Status:</label>
-            <select id="filtro-status" class="form-input">
-              <option value="">Todos</option>
-              <option value="ATIVO">Ativos</option>
-              <option value="CANCELADO">Cancelados</option>
-            </select>
-          </div>
-          <button class="btn primary" onclick="gerarRelatorioPeriodo()">Gerar Relatório</button>
-        </div>
-        <div id="resultado-relatorio" class="modal-resultado" style="display: none;"></div>
+  <!-- Modal Relatório por Período -->
+  <div id="modal-relatorio" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" onclick="fecharModalRelatorio()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Relatório por período</h2>
+        <button type="button" class="btn-icon btn-icon-close" onclick="fecharModalRelatorio()" aria-label="Fechar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="field-label" for="data-inicio">Data inicial</label>
+          <input type="date" id="data-inicio" class="input form-input">
+        </div>
+        <div class="form-group">
+          <label class="field-label" for="data-fim">Data final</label>
+          <input type="date" id="data-fim" class="input form-input">
+        </div>
+        <div class="form-group">
+          <label class="field-label" for="filtro-status">Status</label>
+          <select id="filtro-status" class="input form-input">
+            <option value="">Todos</option>
+            <option value="ATIVO">Ativos</option>
+            <option value="CANCELADO">Cancelados</option>
+          </select>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="gerarRelatorioPeriodo()">Gerar relatório</button>
+      </div>
+      <div id="resultado-relatorio" class="modal-resultado" style="display: none;"></div>
     </div>
+  </div>
 
-    <!-- Modal de Fechamento de Caixa -->
-    <div id="modal-fechar-caixa" class="modal">
-      <div class="modal-content modal-large">
-        <div class="modal-header">
-          <h2>Fechamento de Caixa</h2>
-          <button class="btn danger" onclick="fecharModalFecharCaixa()" style="padding: 4px 8px;">✕</button>
-        </div>
-        <div class="modal-body">
-          <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 4px;">Data:</label>
-            <input type="date" id="data-fechar-caixa" class="form-input">
-          </div>
-          <button class="btn primary" onclick="gerarFecharCaixa()">Gerar Relatório do Dia</button>
-        </div>
-        <div id="resultado-fechar-caixa" class="modal-resultado" style="display: none;"></div>
+  <!-- Modal Fechamento de Caixa -->
+  <div id="modal-fechar-caixa" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" onclick="fecharModalFecharCaixa()"></div>
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2 class="modal-title">Fechamento de caixa</h2>
+        <button type="button" class="btn-icon btn-icon-close" onclick="fecharModalFecharCaixa()" aria-label="Fechar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="field-label" for="data-fechar-caixa">Data</label>
+          <input type="date" id="data-fechar-caixa" class="input form-input">
+        </div>
+        <button type="button" class="btn btn-primary" onclick="gerarFecharCaixa()">Gerar relatório do dia</button>
+      </div>
+      <div id="resultado-fechar-caixa" class="modal-resultado" style="display: none;"></div>
     </div>
+  </div>
 
-    <!-- Modal de Fechamento Samaritano -->
-    <div id="modal-fechar-samaritano" class="modal">
-      <div class="modal-content modal-large">
-        <div class="modal-header">
-          <h2>Fechamento de Caixa - Samaritano</h2>
-          <button class="btn danger" onclick="fecharModalFecharSamaritano()" style="padding: 4px 8px;">✕</button>
-        </div>
-        <div class="modal-body">
-          <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 4px;">Data Inicial:</label>
-            <input type="date" id="data-inicio-samaritano" class="form-input">
-          </div>
-          <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 4px;">Data Final:</label>
-            <input type="date" id="data-fim-samaritano" class="form-input">
-          </div>
-          <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 4px;">Status:</label>
-            <select id="filtro-status-samaritano" class="form-input">
-              <option value="">Todos</option>
-              <option value="ATIVO">Ativos</option>
-              <option value="CANCELADO">Cancelados</option>
-            </select>
-          </div>
-          <button class="btn primary" onclick="gerarFecharSamaritano()">Gerar Relatório</button>
-        </div>
-        <div id="resultado-fechar-samaritano" class="modal-resultado" style="display: none;"></div>
+  <!-- Modal Fechamento Samaritano -->
+  <div id="modal-fechar-samaritano" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" onclick="fecharModalFecharSamaritano()"></div>
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2 class="modal-title">Fechamento de caixa – Samaritano</h2>
+        <button type="button" class="btn-icon btn-icon-close" onclick="fecharModalFecharSamaritano()" aria-label="Fechar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="field-label" for="data-inicio-samaritano">Data inicial</label>
+          <input type="date" id="data-inicio-samaritano" class="input form-input">
+        </div>
+        <div class="form-group">
+          <label class="field-label" for="data-fim-samaritano">Data final</label>
+          <input type="date" id="data-fim-samaritano" class="input form-input">
+        </div>
+        <div class="form-group">
+          <label class="field-label" for="filtro-status-samaritano">Status</label>
+          <select id="filtro-status-samaritano" class="input form-input">
+            <option value="">Todos</option>
+            <option value="ATIVO">Ativos</option>
+            <option value="CANCELADO">Cancelados</option>
+          </select>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="gerarFecharSamaritano()">Gerar relatório</button>
+      </div>
+      <div id="resultado-fechar-samaritano" class="modal-resultado" style="display: none;"></div>
     </div>
   </div>
 
   <script>
     function abrirModalRelatorio() {
-      document.getElementById('modal-relatorio').style.display = 'flex';
-      const hoje = new Date().toISOString().split('T')[0];
+      var modal = document.getElementById('modal-relatorio');
+      modal.classList.add('modal-open');
+      modal.setAttribute('aria-hidden', 'false');
+      var hoje = new Date().toISOString().split('T')[0];
       document.getElementById('data-inicio').value = hoje;
       document.getElementById('data-fim').value = hoje;
     }
 
     function fecharModalRelatorio() {
-      document.getElementById('modal-relatorio').style.display = 'none';
+      document.getElementById('modal-relatorio').classList.remove('modal-open');
+      document.getElementById('modal-relatorio').setAttribute('aria-hidden', 'true');
       document.getElementById('resultado-relatorio').style.display = 'none';
     }
 
     async function gerarRelatorioPeriodo() {
-      const dataInicio = document.getElementById('data-inicio').value;
-      const dataFim = document.getElementById('data-fim').value;
-      const status = document.getElementById('filtro-status').value;
-      
+      var dataInicio = document.getElementById('data-inicio').value;
+      var dataFim = document.getElementById('data-fim').value;
+      var status = document.getElementById('filtro-status').value;
       if (!dataInicio || !dataFim) {
         alert('Por favor, preencha as datas inicial e final.');
         return;
       }
-      
       try {
-        let url = `/api/relatorio/periodo?data_inicio=${dataInicio}&data_fim=${dataFim}`;
-        if (status) {
-          url += `&status=${status}`;
-        }
-        
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        if (data.error) {
-          alert('Erro: ' + data.error);
-          return;
-        }
-        
+        var url = '/api/relatorio/periodo?data_inicio=' + dataInicio + '&data_fim=' + dataFim;
+        if (status) url += '&status=' + status;
+        var response = await fetch(url);
+        var data = await response.json();
+        if (data.error) { alert('Erro: ' + data.error); return; }
         mostrarResultadoRelatorio(data);
-      } catch (error) {
-        alert('Erro ao gerar relatório: ' + error.message);
+      } catch (err) {
+        alert('Erro ao gerar relatório: ' + err.message);
       }
     }
 
     function mostrarResultadoRelatorio(data) {
-      const resultadoDiv = document.getElementById('resultado-relatorio');
+      var resultadoDiv = document.getElementById('resultado-relatorio');
       resultadoDiv.style.display = 'block';
-      
-      // Captura os parâmetros do relatório para exportação PDF
-      const dataInicio = document.getElementById('data-inicio').value;
-      const dataFim = document.getElementById('data-fim').value;
-      const status = document.getElementById('filtro-status').value;
-      
-      let html = `
-        <div class="relatorio-resumo">
-          <h3>Resumo do Relatório</h3>
-          <div class="relatorio-totais">
-            <div class="total-item">
-              <span>Total Ativos:</span>
-              <strong class="total-ativo">R$ ${data.total_ativos_formatado}</strong>
-            </div>
-            <div class="total-item">
-              <span>Total Cancelados:</span>
-              <strong class="total-cancelado">R$ ${data.total_cancelados_formatado}</strong>
-            </div>
-            <div class="total-item">
-              <span>Total Geral:</span>
-              <strong class="total-geral">R$ ${data.total_geral_formatado}</strong>
-            </div>
-            <div class="total-item">
-              <span>Quantidade de Cupons:</span>
-              <strong>${data.quantidade}</strong>
-            </div>
-          </div>
-        </div>
-        <div style="margin-top: 20px; text-align: center;">
-          <button class="btn primary" onclick="exportarPDFPeriodo('${dataInicio}', '${dataFim}', '${status || ''}')">
-            📄 Exportar PDF
-          </button>
-        </div>
-        <div class="relatorio-cupons">
-          <h3>Cupons (${data.cupons.length})</h3>
-          <div class="relatorio-lista">
-      `;
-      
-      data.cupons.forEach(cupom => {
-        html += `
-          <div class="relatorio-cupom-item">
-            <div class="relatorio-cupom-header">
-              <span>${cupom.data_emissao_formatada}</span>
-              <span class="status-badge ${cupom.status === 'ATIVO' ? 'status-ativo' : 'status-cancelado'}">
-                ${cupom.status}
-              </span>
-              <span>R$ ${cupom.total_formatado}</span>
-            </div>
-            <div class="relatorio-cupom-itens">
-              ${cupom.itens.map(item => 
-                `${item.quantidade}x ${item.descricao} - R$ ${item.valor_unitario_formatado}`
-              ).join('<br>')}
-            </div>
-          </div>
-        `;
+      var dataInicio = document.getElementById('data-inicio').value;
+      var dataFim = document.getElementById('data-fim').value;
+      var status = document.getElementById('filtro-status').value;
+      var pdfSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+      var html = '<div class="relatorio-resumo"><h3>Resumo do relatório</h3><div class="relatorio-totais">' +
+        '<div class="total-item"><span>Total ativos</span><strong class="total-ativo">R$ ' + data.total_ativos_formatado + '</strong></div>' +
+        '<div class="total-item"><span>Total cancelados</span><strong class="total-cancelado">R$ ' + data.total_cancelados_formatado + '</strong></div>' +
+        '<div class="total-item"><span>Total geral</span><strong class="total-geral">R$ ' + data.total_geral_formatado + '</strong></div>' +
+        '<div class="total-item"><span>Quantidade de cupons</span><strong>' + data.quantidade + '</strong></div></div></div>' +
+        '<div class="modal-resultado-actions"><button type="button" class="btn btn-primary" onclick="exportarPDFPeriodo(\'' + dataInicio + '\', \'' + dataFim + '\', \'' + (status || '') + '\')">' + pdfSvg + ' Exportar PDF</button></div>' +
+        '<div class="relatorio-cupons"><h3>Cupons (' + data.cupons.length + ')</h3><div class="relatorio-lista">';
+      data.cupons.forEach(function(cupom) {
+        html += '<div class="relatorio-cupom-item"><div class="relatorio-cupom-header">' +
+          '<span>' + cupom.data_emissao_formatada + '</span>' +
+          '<span class="status-badge ' + (cupom.status === 'ATIVO' ? 'status-ativo' : 'status-cancelado') + '">' + cupom.status + '</span>' +
+          '<span class="relatorio-total">R$ ' + cupom.total_formatado + '</span></div>' +
+          '<div class="relatorio-cupom-itens">' + cupom.itens.map(function(item) {
+            return item.quantidade + 'x ' + item.descricao + ' - R$ ' + item.valor_unitario_formatado;
+          }).join('<br>') + '</div></div>';
       });
-      
-      html += `
-          </div>
-        </div>
-      `;
-      
+      html += '</div></div>';
       resultadoDiv.innerHTML = html;
     }
 
     function exportarPDFPeriodo(dataInicio, dataFim, status) {
-      let url = `/api/relatorio/periodo/pdf?data_inicio=${dataInicio}&data_fim=${dataFim}`;
-      if (status) {
-        url += `&status=${status}`;
-      }
+      var url = '/api/relatorio/periodo/pdf?data_inicio=' + dataInicio + '&data_fim=' + dataFim;
+      if (status) url += '&status=' + status;
       window.open(url, '_blank');
     }
 
     function fecharCaixaDia() {
-      document.getElementById('modal-fechar-caixa').style.display = 'flex';
-      const hoje = new Date().toISOString().split('T')[0];
+      var modal = document.getElementById('modal-fechar-caixa');
+      modal.classList.add('modal-open');
+      modal.setAttribute('aria-hidden', 'false');
+      var hoje = new Date().toISOString().split('T')[0];
       document.getElementById('data-fechar-caixa').value = hoje;
     }
 
     function fecharCaixaSamaritano() {
-      document.getElementById('modal-fechar-samaritano').style.display = 'flex';
-      const hoje = new Date().toISOString().split('T')[0];
+      var modal = document.getElementById('modal-fechar-samaritano');
+      modal.classList.add('modal-open');
+      modal.setAttribute('aria-hidden', 'false');
+      var hoje = new Date().toISOString().split('T')[0];
       document.getElementById('data-inicio-samaritano').value = hoje;
       document.getElementById('data-fim-samaritano').value = hoje;
     }
 
     function fecharModalFecharSamaritano() {
-      document.getElementById('modal-fechar-samaritano').style.display = 'none';
+      document.getElementById('modal-fechar-samaritano').classList.remove('modal-open');
+      document.getElementById('modal-fechar-samaritano').setAttribute('aria-hidden', 'true');
       document.getElementById('resultado-fechar-samaritano').style.display = 'none';
     }
 
     async function gerarFecharSamaritano() {
-      const dataInicio = document.getElementById('data-inicio-samaritano').value;
-      const dataFim = document.getElementById('data-fim-samaritano').value;
-      const status = document.getElementById('filtro-status-samaritano').value;
-      
+      var dataInicio = document.getElementById('data-inicio-samaritano').value;
+      var dataFim = document.getElementById('data-fim-samaritano').value;
+      var status = document.getElementById('filtro-status-samaritano').value;
       if (!dataInicio || !dataFim) {
         alert('Por favor, preencha as datas inicial e final.');
         return;
       }
-      
       try {
-        let url = `/api/relatorio/fechar-samaritano?data_inicio=${dataInicio}&data_fim=${dataFim}`;
-        if (status) {
-          url += `&status=${status}`;
-        }
-        
-        const response = await fetch(url);
-        const relatorio = await response.json();
-        
-        if (relatorio.error) {
-          alert('Erro: ' + relatorio.error);
-          return;
-        }
-        
+        var url = '/api/relatorio/fechar-samaritano?data_inicio=' + dataInicio + '&data_fim=' + dataFim;
+        if (status) url += '&status=' + status;
+        var response = await fetch(url);
+        var relatorio = await response.json();
+        if (relatorio.error) { alert('Erro: ' + relatorio.error); return; }
         mostrarResultadoFecharSamaritano(relatorio);
-      } catch (error) {
-        alert('Erro ao gerar fechamento Samaritano: ' + error.message);
+      } catch (err) {
+        alert('Erro ao gerar fechamento Samaritano: ' + err.message);
       }
     }
 
     function mostrarResultadoFecharSamaritano(data) {
-      const resultadoDiv = document.getElementById('resultado-fechar-samaritano');
+      var resultadoDiv = document.getElementById('resultado-fechar-samaritano');
       resultadoDiv.style.display = 'block';
-      
-      let html = `
-        <div class="fechar-caixa-header">
-          <h2>Fechamento de Caixa Samaritano</h2>
-          <p>Período: ${data.data_inicio_formatada} a ${data.data_fim_formatada}</p>
-        </div>
-        <div class="relatorio-resumo">
-          <div class="relatorio-totais">
-            <div class="total-item">
-              <span>Total Ativos:</span>
-              <strong class="total-ativo">R$ ${data.total_ativos_formatado}</strong>
-            </div>
-            <div class="total-item">
-              <span>Total Cancelados:</span>
-              <strong class="total-cancelado">R$ ${data.total_cancelados_formatado}</strong>
-            </div>
-            <div class="total-item total-destaque">
-              <span>TOTAL SAMARITANO:</span>
-              <strong class="total-geral">R$ ${data.total_geral_formatado}</strong>
-            </div>
-            <div class="total-item">
-              <span>Quantidade de Cupons:</span>
-              <strong>${data.quantidade}</strong>
-            </div>
-          </div>
-        </div>
-        <div style="margin-top: 20px; text-align: center;">
-          <button class="btn primary" onclick="exportarPDFSamaritano('${data.data_inicio}', '${data.data_fim}', '${data.filtro_status || ''}')">
-            📄 Exportar PDF
-          </button>
-        </div>
-        <div class="relatorio-cupons">
-          <h3>Detalhamento dos Cupons Samaritano (${data.cupons.length})</h3>
-          <div class="relatorio-lista">
-      `;
-      
-      data.cupons.forEach(cupom => {
-        html += `
-          <div class="relatorio-cupom-item">
-            <div class="relatorio-cupom-header">
-              <span>${cupom.data_emissao_formatada}</span>
-              <span class="status-badge ${cupom.status === 'ATIVO' ? 'status-ativo' : 'status-cancelado'}">
-                ${cupom.status}
-              </span>
-              <span class="badge-samaritano">🩺 Samaritano</span>
-              ${cupom.numero_os ? `<span>OS: ${cupom.numero_os}</span>` : ''}
-              <span class="relatorio-total">R$ ${cupom.total_formatado}</span>
-            </div>
-            <div class="relatorio-cupom-itens">
-              ${cupom.itens.map(item => 
-                `${item.quantidade}x ${item.descricao} - R$ ${item.valor_unitario_formatado}`
-              ).join('<br>')}
-            </div>
-          </div>
-        `;
+      var pdfSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+      var html = '<div class="fechar-caixa-header"><h2>Fechamento de caixa Samaritano</h2><p>Período: ' + data.data_inicio_formatada + ' a ' + data.data_fim_formatada + '</p></div>' +
+        '<div class="relatorio-resumo"><div class="relatorio-totais">' +
+        '<div class="total-item"><span>Total ativos</span><strong class="total-ativo">R$ ' + data.total_ativos_formatado + '</strong></div>' +
+        '<div class="total-item"><span>Total cancelados</span><strong class="total-cancelado">R$ ' + data.total_cancelados_formatado + '</strong></div>' +
+        '<div class="total-item total-destaque"><span>Total Samaritano</span><strong class="total-geral">R$ ' + data.total_geral_formatado + '</strong></div>' +
+        '<div class="total-item"><span>Quantidade de cupons</span><strong>' + data.quantidade + '</strong></div></div></div>' +
+        '<div class="modal-resultado-actions"><button type="button" class="btn btn-primary" onclick="exportarPDFSamaritano(\'' + data.data_inicio + '\', \'' + data.data_fim + '\', \'' + (data.filtro_status || '') + '\')">' + pdfSvg + ' Exportar PDF</button></div>' +
+        '<div class="relatorio-cupons"><h3>Detalhamento dos cupons Samaritano (' + data.cupons.length + ')</h3><div class="relatorio-lista">';
+      data.cupons.forEach(function(cupom) {
+        html += '<div class="relatorio-cupom-item"><div class="relatorio-cupom-header">' +
+          '<span>' + cupom.data_emissao_formatada + '</span>' +
+          '<span class="status-badge ' + (cupom.status === 'ATIVO' ? 'status-ativo' : 'status-cancelado') + '">' + cupom.status + '</span>' +
+          '<span class="badge-samaritano">Samaritano</span>' +
+          (cupom.numero_os ? '<span>OS: ' + cupom.numero_os + '</span>' : '') +
+          '<span class="relatorio-total">R$ ' + cupom.total_formatado + '</span></div>' +
+          '<div class="relatorio-cupom-itens">' + cupom.itens.map(function(item) {
+            return item.quantidade + 'x ' + item.descricao + ' - R$ ' + item.valor_unitario_formatado;
+          }).join('<br>') + '</div></div>';
       });
-      
-      html += `
-          </div>
-        </div>
-      `;
-      
+      html += '</div></div>';
       resultadoDiv.innerHTML = html;
     }
 
     function exportarPDFSamaritano(dataInicio, dataFim, status) {
-      let url = `/api/relatorio/fechar-samaritano/pdf?data_inicio=${dataInicio}&data_fim=${dataFim}`;
-      if (status) {
-        url += `&status=${status}`;
-      }
+      var url = '/api/relatorio/fechar-samaritano/pdf?data_inicio=' + dataInicio + '&data_fim=' + dataFim;
+      if (status) url += '&status=' + status;
       window.open(url, '_blank');
     }
 
     function fecharModalFecharCaixa() {
-      document.getElementById('modal-fechar-caixa').style.display = 'none';
+      document.getElementById('modal-fechar-caixa').classList.remove('modal-open');
+      document.getElementById('modal-fechar-caixa').setAttribute('aria-hidden', 'true');
       document.getElementById('resultado-fechar-caixa').style.display = 'none';
     }
 
     async function gerarFecharCaixa() {
-      const data = document.getElementById('data-fechar-caixa').value;
-      
-      if (!data) {
-        alert('Por favor, selecione uma data.');
-        return;
-      }
-      
+      var data = document.getElementById('data-fechar-caixa').value;
+      if (!data) { alert('Por favor, selecione uma data.'); return; }
       try {
-        const response = await fetch(`/api/relatorio/fechar-caixa?data=${data}`);
-        const relatorio = await response.json();
-        
-        if (relatorio.error) {
-          alert('Erro: ' + relatorio.error);
-          return;
-        }
-        
+        var response = await fetch('/api/relatorio/fechar-caixa?data=' + data);
+        var relatorio = await response.json();
+        if (relatorio.error) { alert('Erro: ' + relatorio.error); return; }
         mostrarResultadoFecharCaixa(relatorio);
-      } catch (error) {
-        alert('Erro ao gerar fechamento de caixa: ' + error.message);
+      } catch (err) {
+        alert('Erro ao gerar fechamento de caixa: ' + err.message);
       }
     }
 
     function mostrarResultadoFecharCaixa(data) {
-      const resultadoDiv = document.getElementById('resultado-fechar-caixa');
+      var resultadoDiv = document.getElementById('resultado-fechar-caixa');
       resultadoDiv.style.display = 'block';
-      
-      // Captura a data para exportação PDF
-      const dataFechar = document.getElementById('data-fechar-caixa').value;
-      
-      let html = `
-        <div class="fechar-caixa-header">
-          <h2>Fechamento de Caixa - ${data.data_formatada}</h2>
-        </div>
-        <div class="relatorio-resumo">
-          <div class="relatorio-totais">
-            <div class="total-item">
-              <span>Total Ativos:</span>
-              <strong class="total-ativo">R$ ${data.total_ativos_formatado}</strong>
-            </div>
-            <div class="total-item">
-              <span>Total Cancelados:</span>
-              <strong class="total-cancelado">R$ ${data.total_cancelados_formatado}</strong>
-            </div>
-            <div class="total-item total-destaque">
-              <span>TOTAL DO DIA:</span>
-              <strong class="total-geral">R$ ${data.total_geral_formatado}</strong>
-            </div>
-            <div class="total-item">
-              <span>Quantidade de Cupons:</span>
-              <strong>${data.quantidade}</strong>
-            </div>
-          </div>
-        </div>
-        <div style="margin-top: 20px; text-align: center;">
-          <button class="btn primary" onclick="exportarPDFFecharCaixa('${dataFechar || ''}')">
-            📄 Exportar PDF
-          </button>
-        </div>
-        <div class="relatorio-cupons">
-          <h3>Detalhamento dos Cupons (${data.cupons.length})</h3>
-          <div class="relatorio-lista">
-      `;
-      
-      data.cupons.forEach(cupom => {
-        html += `
-          <div class="relatorio-cupom-item">
-            <div class="relatorio-cupom-header">
-              <span>${cupom.data_emissao_formatada}</span>
-              <span class="status-badge ${cupom.status === 'ATIVO' ? 'status-ativo' : 'status-cancelado'}">
-                ${cupom.status}
-              </span>
-              ${cupom.samaritano ? '<span class="badge-samaritano">🩺 Samaritano</span>' : ''}
-              ${cupom.numero_os ? `<span>OS: ${cupom.numero_os}</span>` : ''}
-              <span class="relatorio-total">R$ ${cupom.total_formatado}</span>
-            </div>
-            <div class="relatorio-cupom-itens">
-              ${cupom.itens.map(item => 
-                `${item.quantidade}x ${item.descricao} - R$ ${item.valor_unitario_formatado}`
-              ).join('<br>')}
-            </div>
-          </div>
-        `;
+      var dataFechar = document.getElementById('data-fechar-caixa').value;
+      var pdfSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+      var html = '<div class="fechar-caixa-header"><h2>Fechamento de caixa – ' + data.data_formatada + '</h2></div>' +
+        '<div class="relatorio-resumo"><div class="relatorio-totais">' +
+        '<div class="total-item"><span>Total ativos</span><strong class="total-ativo">R$ ' + data.total_ativos_formatado + '</strong></div>' +
+        '<div class="total-item"><span>Total cancelados</span><strong class="total-cancelado">R$ ' + data.total_cancelados_formatado + '</strong></div>' +
+        '<div class="total-item total-destaque"><span>Total do dia</span><strong class="total-geral">R$ ' + data.total_geral_formatado + '</strong></div>' +
+        '<div class="total-item"><span>Quantidade de cupons</span><strong>' + data.quantidade + '</strong></div></div></div>' +
+        '<div class="modal-resultado-actions"><button type="button" class="btn btn-primary" onclick="exportarPDFFecharCaixa(\'' + (dataFechar || '') + '\')">' + pdfSvg + ' Exportar PDF</button></div>' +
+        '<div class="relatorio-cupons"><h3>Detalhamento dos cupons (' + data.cupons.length + ')</h3><div class="relatorio-lista">';
+      data.cupons.forEach(function(cupom) {
+        html += '<div class="relatorio-cupom-item"><div class="relatorio-cupom-header">' +
+          '<span>' + cupom.data_emissao_formatada + '</span>' +
+          '<span class="status-badge ' + (cupom.status === 'ATIVO' ? 'status-ativo' : 'status-cancelado') + '">' + cupom.status + '</span>' +
+          (cupom.samaritano ? '<span class="badge-samaritano">Samaritano</span>' : '') +
+          (cupom.numero_os ? '<span>OS: ' + cupom.numero_os + '</span>' : '') +
+          '<span class="relatorio-total">R$ ' + cupom.total_formatado + '</span></div>' +
+          '<div class="relatorio-cupom-itens">' + cupom.itens.map(function(item) {
+            return item.quantidade + 'x ' + item.descricao + ' - R$ ' + item.valor_unitario_formatado;
+          }).join('<br>') + '</div></div>';
       });
-      
-      html += `
-          </div>
-        </div>
-      `;
-      
+      html += '</div></div>';
       resultadoDiv.innerHTML = html;
     }
 
     function exportarPDFFecharCaixa(data) {
-      let url = `/api/relatorio/fechar-caixa/pdf`;
-      if (data) {
-        url += `?data=${data}`;
-      }
+      var url = '/api/relatorio/fechar-caixa/pdf';
+      if (data) url += '?data=' + data;
       window.open(url, '_blank');
     }
 
-    // Fechar modais ao clicar fora
-    window.onclick = function(event) {
-      const modalRelatorio = document.getElementById('modal-relatorio');
-      const modalFecharCaixa = document.getElementById('modal-fechar-caixa');
-      const modalSamaritano = document.getElementById('modal-fechar-samaritano');
-      if (event.target === modalRelatorio) {
-        fecharModalRelatorio();
+    document.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal-backdrop')) {
+        var modal = event.target.closest('.modal');
+        if (modal && modal.id === 'modal-relatorio') fecharModalRelatorio();
+        else if (modal && modal.id === 'modal-fechar-caixa') fecharModalFecharCaixa();
+        else if (modal && modal.id === 'modal-fechar-samaritano') fecharModalFecharSamaritano();
       }
-      if (event.target === modalFecharCaixa) {
-        fecharModalFecharCaixa();
-      }
-      if (event.target === modalSamaritano) {
-        fecharModalFecharSamaritano();
-      }
-    }
+    });
 
-    // Toggle de Tema
     function toggleTheme() {
-      const body = document.body;
-      const themeIcon = document.getElementById('theme-icon');
-      const isDark = body.classList.toggle('dark-mode');
-      
+      var body = document.body;
+      var themeIcon = document.getElementById('theme-icon');
+      var label = document.querySelector('.theme-label');
+      var isDark = body.classList.toggle('dark-mode');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      themeIcon.textContent = isDark ? '☀️' : '🌙';
+      if (themeIcon) {
+        themeIcon.innerHTML = isDark
+          ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+          : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+      }
+      if (label) label.textContent = isDark ? 'Modo claro' : 'Modo escuro';
     }
 
-    // Carrega tema salvo
     document.addEventListener('DOMContentLoaded', function() {
-      const savedTheme = localStorage.getItem('theme');
-      const body = document.body;
-      const themeIcon = document.getElementById('theme-icon');
-      
+      var savedTheme = localStorage.getItem('theme');
+      var body = document.body;
+      var themeIcon = document.getElementById('theme-icon');
+      var label = document.querySelector('.theme-label');
       if (savedTheme === 'dark') {
         body.classList.add('dark-mode');
-        themeIcon.textContent = '☀️';
+        if (themeIcon) themeIcon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+        if (label) label.textContent = 'Modo claro';
       } else {
         body.classList.remove('dark-mode');
-        themeIcon.textContent = '🌙';
+        if (themeIcon) themeIcon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+        if (label) label.textContent = 'Modo escuro';
       }
     });
   </script>

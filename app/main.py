@@ -212,8 +212,8 @@ async def emitir(
             numero_os=numero_os.strip() or None,
         )
 
-        # 🔽 agora passa pelo serviço de impressão
-        printer_service.emitir(texto, samaritano_flag)
+
+        printer_service.emitir(texto, samaritano_flag, save_only=emitir_nfse_flag)
 
         # 🔽 Emite NFSe se solicitado
         if emitir_nfse_flag and _NFSE_AVAILABLE:
@@ -262,12 +262,13 @@ async def emitir(
                 print(f"Erro ao emitir NFSe: {nfse_error}")
                 # Continua com a emissão do cupom mesmo se NFSe falhar
 
-        # 🔽 salva no histórico
+        # 🔽 salva no histórico (com id do PDF da NFSe quando existir)
         history_service.add_cupom(
             itens=itens,
             texto_cupom=texto,
             samaritano=samaritano_flag,
             numero_os=numero_os.strip() or None,
+            nfse_pdf_id=nfse_pdf_id,
         )
 
         msg_parts = [f"Cupom emitido com sucesso ({'Samaritano' if samaritano_flag else 'Padrão'})!"]
@@ -316,10 +317,14 @@ async def emitir(
 
 
 @app.get("/api/historico")
-async def get_historico(limit: Optional[int] = None):
-    """API endpoint para retornar o histórico de cupons"""
-    historico = history_service.get_history(limit=limit)
-    return JSONResponse(content=historico)
+async def get_historico(
+    limit: Optional[int] = None,
+    offset: Optional[int] = Query(0, ge=0),
+):
+    """API endpoint para retornar o histórico de cupons (formatado para o template)."""
+    historico = history_service.get_history(limit=limit, offset=offset)
+    historico_formatado = _format_history_for_template(historico)
+    return JSONResponse(content=historico_formatado)
 
 
 @app.post("/api/cupom/{cupom_id}/cancelar")

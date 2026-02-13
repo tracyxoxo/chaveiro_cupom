@@ -17,9 +17,10 @@ class PrinterService:
     def _get_default_printer(self):
         return win32print.GetDefaultPrinter()
 
-    def emitir(self, texto: str, samaritano: bool) -> Path:
+    def emitir(self, texto: str, samaritano: bool, save_only: bool = False) -> Path:
         path = self._salvar_txt(texto, samaritano)
-        self._print_windows_raw(texto)
+        if not save_only:
+            self._print_windows_raw(texto)
         return path
 
     def _salvar_txt(self, texto: str, samaritano: bool) -> Path:

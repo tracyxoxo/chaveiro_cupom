@@ -13,7 +13,7 @@ from .cupom_core import ItemCupom
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Diretório do histórico: use HISTORICO_CUPONS_DIR (pasta na nuvem) ou raiz do projeto
-_HISTORY_DIR = r"C:\Users\mathh\Documents\Projetos\chaveiro_cupom\app\teste"
+_HISTORY_DIR = r"Y:\Meu Drive\Sistema Cupom - Chaveiro\Cupons emitidos"
 if _HISTORY_DIR:
     _history_dir = Path(_HISTORY_DIR).expanduser().resolve()
 else:
@@ -56,6 +56,7 @@ class HistoryService:
         samaritano: bool,
         numero_os: str | None = None,
         data_emissao: datetime | None = None,
+        nfse_pdf_id: str | None = None,
     ) -> Dict[str, Any]:
         """
         Adiciona um cupom ao histórico
@@ -90,6 +91,8 @@ class HistoryService:
             "texto_cupom": texto_cupom,
             "status": "ATIVO",  # Novo cupom sempre começa como ATIVO
         }
+        if nfse_pdf_id is not None:
+            cupom_entry["nfse_pdf_id"] = nfse_pdf_id
         
         # Lê histórico atual
         history = self._read_history()
@@ -107,31 +110,37 @@ class HistoryService:
         
         return cupom_entry
 
-    def get_history(self, limit: int | None = None) -> List[Dict[str, Any]]:
+    def get_history(
+        self,
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> List[Dict[str, Any]]:
         """
-        Retorna o histórico de cupons
-        
+        Retorna o histórico de cupons.
+
         Args:
-            limit: Número máximo de cupons a retornar (None = todos)
-            
+            limit: Número máximo de cupons a retornar (None = todos a partir de offset).
+            offset: Quantidade de cupons a pular do início.
+
         Returns:
-            Lista de cupons ordenados do mais recente para o mais antigo
+            Lista de cupons ordenados do mais recente para o mais antigo.
         """
         history = self._read_history()
-        
+
         # Migra cupons antigos sem status para ATIVO
         needs_save = False
         for cupom in history:
             if "status" not in cupom:
                 cupom["status"] = "ATIVO"
                 needs_save = True
-        
+
         if needs_save:
             self._write_history(history)
-        
+
+        start = offset
         if limit is not None:
-            return history[:limit]
-        return history
+            return history[start : start + limit]
+        return history[start:] if start else history
 
     def get_cupom_by_id(self, cupom_id: str) -> Dict[str, Any] | None:
         """Retorna um cupom específico pelo ID"""

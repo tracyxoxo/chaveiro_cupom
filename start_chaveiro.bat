@@ -5,7 +5,7 @@ REM Vai para a pasta do projeto
 cd /d %~dp0
 
 REM Ativa o ambiente virtual
-CALL venv\Scripts\activate.bat
+CALL .venv\Scripts\activate.bat
 
 REM Abre o navegador
 start "" http://127.0.0.1:8000

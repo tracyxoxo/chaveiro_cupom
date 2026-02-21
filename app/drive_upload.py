@@ -57,7 +57,7 @@ def upload_pdf_and_get_link(pdf_path: Path, filename: Optional[str] = None) -> O
     service = _get_drive_service()
     if service is None:
         return "service not found"
-    folder_id = "add you folder id here"
+    folder_id = "add it here"
     if not folder_id:
         return "folder_id not found"
     path = Path(pdf_path).resolve()

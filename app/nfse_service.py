@@ -28,9 +28,9 @@ class NFSeService:
         
         # Credenciais estáticas (configurar via variáveis de ambiente)
         # Você pode definir essas variáveis no sistema ou criar um arquivo .env
-        self.inscricao = "33.198.084/0001-79"
-        self.senha = "Chaveiro24"
-        self.servico_id = "0cc05183-d497-4745-bba7-842c283a7ca7"
+        self.inscricao = "add it here"
+        self.senha = "add it here"
+        self.servico_id = "add it here"
         
         if not self.inscricao or not self.senha:
             raise RuntimeError(

@@ -13,7 +13,7 @@ from .cupom_core import ItemCupom
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Diretório do histórico: use HISTORICO_CUPONS_DIR (pasta na nuvem) ou raiz do projeto
-_HISTORY_DIR = r"add here"
+_HISTORY_DIR = r"add it here"
 if _HISTORY_DIR:
     _history_dir = Path(_HISTORY_DIR).expanduser().resolve()
 else:

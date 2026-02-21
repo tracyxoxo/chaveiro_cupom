@@ -1,5 +1,6 @@
 # 🔑 Chaveiro Brotero - Sistema de Cupons
 
+> 📖 **English:** [Read in English](README.en.md)
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg) ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg) ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
@@ -22,46 +23,46 @@ Exemplo de como adicionar screenshots:
 ![Emissão NFSe](docs/screenshots/nfse.png)
 -->
 
-## ✨ Funcionalidades
+##  Funcionalidades
 
 ### 🧾 Emissão de Cupons
-- ✅ Interface web moderna e responsiva
-- ✅ Suporte a múltiplos itens por cupom
-- ✅ Cálculo automático de totais
-- ✅ Pré-visualização antes de emitir
-- ✅ Impressão direta em impressoras ESC/POS
-- ✅ Salvamento automático em arquivo .txt
+-  Interface web moderna e responsiva
+-  Suporte a múltiplos itens por cupom
+-  Cálculo automático de totais
+-  Pré-visualização antes de emitir
+-  Impressão direta em impressoras ESC/POS
+-  Salvamento automático em arquivo .txt
 
 ### 🏥 Cupons Customizáveis
-- ✅ Modo especial para serviços customizáveis
-- ✅ Campo obrigatório para número da OS
-- ✅ Formatação diferenciada no cupom
-- ✅ Relatórios específicos por período
+-  Modo especial para serviços customizáveis
+-  Campo obrigatório para número da OS
+-  Formatação diferenciada no cupom
+-  Relatórios específicos por período
 
 ### 📄 Nota Fiscal de Serviços Eletrônica (NFSe)
-- ✅ Emissão automática de NFSe via portal NFSe.gov.br
-- ✅ Busca automática de razão social do tomador
-- ✅ Geração de PDF da DANFSE
-- ✅ Upload automático para Google Drive
-- ✅ Link público para compartilhamento
-- ✅ Integração com WhatsApp para envio ao cliente
-- ✅ Nome do arquivo: `DANFSE_RAZAOSOCIAL_data.pdf`
+-  Emissão automática de NFSe via portal NFSe.gov.br
+-  Busca automática de razão social do tomador
+-  Geração de PDF da DANFSE
+-  Upload automático para Google Drive
+-  Link público para compartilhamento
+-  Integração com WhatsApp para envio ao cliente
+-  Nome do arquivo: `DANFSE_RAZAOSOCIAL_data.pdf`
 
 ### 📊 Histórico e Relatórios
-- ✅ Histórico completo de todos os cupons emitidos
-- ✅ Visualização paginada do histórico
-- ✅ Cancelamento de cupons
-- ✅ Relatórios por período
-- ✅ Fechamento de caixa diário
-- ✅ Relatórios específicos para nota customizada
-- ✅ Exportação em HTML para impressão/PDF
+-  Histórico completo de todos os cupons emitidos
+-  Visualização paginada do histórico
+-  Cancelamento de cupons
+-  Relatórios por período
+-  Fechamento de caixa diário
+-  Relatórios específicos para nota customizada
+-  Exportação em HTML para impressão/PDF
 
 ### 🎨 Interface
-- ✅ Design moderno e intuitivo
-- ✅ Modo escuro/claro
-- ✅ Responsivo (funciona em tablets e celulares)
-- ✅ Feedback visual em todas as ações
-- ✅ Histórico com badges visuais (Padrão/Customizado/NFSe)
+-  Design moderno e intuitivo
+-  Modo escuro/claro
+-  Responsivo (funciona em tablets e celulares)
+-  Feedback visual em todas as ações
+-  Histórico com badges visuais (Padrão/Customizado/NFSe)
 
 ## 🚀 Instalação
 
@@ -169,7 +170,7 @@ set USB_PRODUCT_ID=0x0202
 set PRINTER_BACKEND=usb
 ```
 
-## 🎯 Como Usar
+##  Como Usar
 
 ### Iniciar o Servidor
 
@@ -252,7 +253,7 @@ chaveiro_cupom/
 └── README.md                  # Este arquivo
 ```
 
-## 🛠️ Tecnologias
+##  Tecnologias
 
 - **[FastAPI](https://fastapi.tiangolo.com/)** - Framework web moderno e rápido
 - **[Uvicorn](https://www.uvicorn.org/)** - Servidor ASGI
@@ -262,19 +263,19 @@ chaveiro_cupom/
 - **[Google API Python Client](https://github.com/googleapis/google-api-python-client)** - Integração Google Drive
 - **[Python ESC/POS](https://github.com/python-escpos/python-escpos)** - Comunicação com impressoras
 
-## 📚 Documentação
+##  Documentação
 
 - **[Arquitetura do Sistema](arquitetura.md)** - Documentação técnica completa
 - **[Configuração NFSe](NFSE_SETUP.md)** - Guia passo a passo para configurar NFSe
 
-## 🔒 Segurança
+##  Segurança
 
 - Credenciais sensíveis não devem ser commitadas no repositório
 - Use variáveis de ambiente para configurações sensíveis
 - O arquivo `token.json` (Google OAuth) é gerado automaticamente e não deve ser compartilhado
 - O arquivo `client_secrets.json` contém credenciais OAuth e não deve ser versionado
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### Impressora não imprime
 - Verifique se a impressora está conectada e ligada

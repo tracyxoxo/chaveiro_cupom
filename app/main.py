@@ -1,7 +1,9 @@
 from __future__ import annotations
 from pathlib import Path
+from urllib.parse import quote
 
 import os
+import re
 import uuid
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
@@ -17,6 +19,7 @@ from .cupom_core import CupomFormatter, ItemCupom
 from .printer import PrinterService
 from .history import HistoryService
 from .nfse_service import NFSeService
+from . import drive_upload as drive_upload_module
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 app = FastAPI(title="Chaveiro Brotero - Cupom")
@@ -49,6 +52,34 @@ def _format_money_br(valor_str: str) -> str:
         return valor_str.replace(".", ",")
 
 
+def _sanitize_filename(text: str) -> str:
+    """Remove caracteres especiais de um texto para usar em nome de arquivo"""
+    # Remove acentos e caracteres especiais, mantém apenas letras, números, espaços e hífens
+    text = text.strip()
+    # Substitui espaços múltiplos por um único espaço
+    text = re.sub(r'\s+', ' ', text)
+    # Remove caracteres inválidos para nome de arquivo (Windows/Linux)
+    text = re.sub(r'[<>:"/\\|?*]', '', text)
+    # Limita tamanho (máximo 100 caracteres)
+    if len(text) > 100:
+        text = text[:100]
+    return text.strip()
+
+
+def _whatsapp_nfse_url(drive_link: str | None) -> str:
+    """Monta a URL do WhatsApp com a mensagem 'Segue a nota' e o link do Drive (se houver)."""
+
+    msg = (
+        "🔔 *CHAVEIRO BROTERO*\n\n"
+        "Sua Nota Fiscal Eletrônica está pronta! ✅\n\n"
+        "📥 *CLIQUE PARA BAIXAR:* \n"
+        f"{drive_link}\n\n"
+        "------------------------------------------\n"
+        "Obrigado pela preferência! 🔑"
+    )
+    return "https://api.whatsapp.com/send?text=" + quote(msg)
+
+
 def _format_history_for_template(historico: List[dict]) -> List[dict]:
     """Formata o histórico para exibição no template"""
     historico_formatado = []
@@ -59,6 +90,11 @@ def _format_history_for_template(historico: List[dict]) -> List[dict]:
         # Formata valores dos itens
         for item in cupom_formatted["itens"]:
             item["valor_unitario_formatado"] = _format_money_br(item["valor_unitario"])
+        # URL do WhatsApp com link do Drive (quando existir)
+        if cupom_formatted.get("nfse_drive_link"):
+            cupom_formatted["nfse_whatsapp_url"] = _whatsapp_nfse_url(cupom_formatted["nfse_drive_link"])
+        else:
+            cupom_formatted["nfse_whatsapp_url"] = _whatsapp_nfse_url(None)
         historico_formatado.append(cupom_formatted)
     return historico_formatado
 
@@ -198,6 +234,7 @@ async def emitir(
     emitir_nfse_flag = emitir_nfse is not None
     imprimir_nfse_flag = imprimir_nfse is not None
     nfse_pdf_id = None
+    nfse_drive_link = None
 
     try:
         itens = _parse_itens(descricao, quantidade, valor)
@@ -216,6 +253,7 @@ async def emitir(
         printer_service.emitir(texto, samaritano_flag, save_only=emitir_nfse_flag)
 
         # 🔽 Emite NFSe se solicitado
+        nfse_razao_social = None
         if emitir_nfse_flag and _NFSE_AVAILABLE:
             try:
                 # Remove formatação do CPF/CNPJ
@@ -232,16 +270,29 @@ async def emitir(
                     for item in itens
                 ])
                 
-                # Emite a nota
-                pdf_content = nfse_service.emitir_nota(
+                # Emite a nota (retorna PDF e razão social)
+                pdf_content, razao_social = nfse_service.emitir_nota(
                     cpf_cnpj=cpf_cnpj_limpo,
                     data_competencia=datetime.now(),
                     valor=str(total),
                     descricao=descricao_nfse,
                 )
+                nfse_razao_social = razao_social
                 
-                # Salva PDF temporariamente e gera ID
+                # Formata nome do arquivo: DANFSE_RAZAOSOCIAL_data
+                data_emissao_str = datetime.now().strftime("%Y%m%d")
+                razao_social_sanitizada = _sanitize_filename(razao_social) if razao_social else "SEM_RAZAO_SOCIAL"
+                # Se razão social estiver vazia após sanitização, usa fallback
+                if not razao_social_sanitizada:
+                    razao_social_sanitizada = "SEM_RAZAO_SOCIAL"
+                
+                # Gera ID único para o arquivo local
                 nfse_pdf_id = str(uuid.uuid4())
+                
+                # Nome do arquivo para salvar localmente e no Drive
+                filename_pdf = f"DANFSE_{razao_social_sanitizada}_{data_emissao_str}.pdf"
+                
+                # Salva PDF temporariamente
                 pdf_path = BASE_DIR / "_nfse" / f"{nfse_pdf_id}.pdf"
                 pdf_path.parent.mkdir(exist_ok=True)
                 with open(pdf_path, "wb") as f:
@@ -253,6 +304,17 @@ async def emitir(
                         printer_service.imprimir_pdf(pdf_path)
                     except Exception as e:
                         print(f"Aviso: não foi possível imprimir a NFSe: {e}")
+
+                # Upload para Google Drive (pasta configurada) e link "qualquer pessoa com link pode visualizar"
+                try:
+                    link = drive_upload_module.upload_pdf_and_get_link(
+                        pdf_path,
+                        filename=filename_pdf,
+                    )
+                    if link:
+                        nfse_drive_link = link
+                except Exception as e:
+                    print(f"Aviso: upload da NFSe para o Drive não realizado: {e}")
                 
             except ValueError as nfse_error:
                 # Erro de validação - impede a emissão
@@ -269,6 +331,8 @@ async def emitir(
             samaritano=samaritano_flag,
             numero_os=numero_os.strip() or None,
             nfse_pdf_id=nfse_pdf_id,
+            nfse_drive_link=nfse_drive_link,
+            nfse_razao_social=nfse_razao_social
         )
 
         msg_parts = [f"Cupom emitido com sucesso ({'Samaritano' if samaritano_flag else 'Padrão'})!"]
@@ -311,6 +375,8 @@ async def emitir(
             "cpf_cnpj": cpf_cnpj,
             "imprimir_nfse": imprimir_nfse_flag,
             "nfse_pdf_id": nfse_pdf_id,
+            "nfse_drive_link": nfse_drive_link,
+            "nfse_whatsapp_url": _whatsapp_nfse_url(nfse_drive_link),
             "historico": historico_formatado,
         },
     )

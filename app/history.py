@@ -13,7 +13,7 @@ from .cupom_core import ItemCupom
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Diretório do histórico: use HISTORICO_CUPONS_DIR (pasta na nuvem) ou raiz do projeto
-_HISTORY_DIR = r"Y:\Meu Drive\Sistema Cupom - Chaveiro\Cupons emitidos"
+_HISTORY_DIR = r"add here"
 if _HISTORY_DIR:
     _history_dir = Path(_HISTORY_DIR).expanduser().resolve()
 else:
@@ -57,6 +57,8 @@ class HistoryService:
         numero_os: str | None = None,
         data_emissao: datetime | None = None,
         nfse_pdf_id: str | None = None,
+        nfse_drive_link: str | None = None,
+        nfse_razao_social: str | None = None
     ) -> Dict[str, Any]:
         """
         Adiciona um cupom ao histórico
@@ -93,6 +95,10 @@ class HistoryService:
         }
         if nfse_pdf_id is not None:
             cupom_entry["nfse_pdf_id"] = nfse_pdf_id
+        if nfse_drive_link is not None:
+            cupom_entry["nfse_drive_link"] = nfse_drive_link
+        if nfse_razao_social is not None:
+            cupom_entry["nfse_razao_social"] = nfse_razao_social
         
         # Lê histórico atual
         history = self._read_history()

@@ -754,6 +754,33 @@ body.dark-mode .preview-box {
   color: var(--warning);
 }
 
+.badge-nfse {
+  background-color: var(--primary-color, #6366f1);
+  color: white;
+  font-weight: 600;
+}
+
+.badge-info {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  font-weight: 500;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.dark-mode .badge-info {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+.body.dark-mode .badge-nfse {
+  background-color: #312e81;
+  color: #e0e7ff;
+  border: 1px solid #312e81;
+}
+
 body.dark-mode .badge-os {
   color: #fdcb6e;
 }

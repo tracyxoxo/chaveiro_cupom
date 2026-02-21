@@ -45,9 +45,9 @@ class NFSeService:
         data_competencia: datetime,
         valor: str,
         descricao: str,
-    ) -> bytes:
+    ) -> tuple[bytes, str]:
         """
-        Emite uma nota fiscal e retorna o PDF da DANFSE
+        Emite uma nota fiscal e retorna o PDF da DANFSE e a razão social do tomador
         
         Args:
             cpf_cnpj: CPF ou CNPJ do tomador (apenas números)
@@ -56,7 +56,7 @@ class NFSeService:
             descricao: Descrição do serviço
             
         Returns:
-            bytes: Conteúdo do PDF da DANFSE
+            tuple[bytes, str]: Tupla com (conteúdo do PDF da DANFSE, razão social do tomador)
         """
         # Remove formatação do CPF/CNPJ
         tomador = cpf_cnpj.replace(".", "").replace("-", "").replace("/", "")
@@ -71,6 +71,9 @@ class NFSeService:
         
         # Busca informações do tomador
         client.lookup_tomador(tomador)
+        
+        # Captura a razão social do tomador
+        razao_social = client.tomador.get("nome", "") if client.tomador else ""
         
         # Prepara dados da nota
         dados = {
@@ -98,5 +101,5 @@ class NFSeService:
         if response.status_code != 200:
             raise Exception(f"Erro ao baixar DANFSe: {response.status_code}")
         
-        # Retorna o conteúdo do PDF
-        return response.content
+        # Retorna o conteúdo do PDF e a razão social
+        return response.content, razao_social
